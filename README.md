@@ -13,7 +13,7 @@ An **intelligent, production-ready Agentic AI system** that autonomously reasons
 
 **Try it now:** [https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack](https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack)
 
-**API Documentation:** [https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack/api/docs](https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack/api/docs) (Swagger UI)
+**Note:** API documentation is available when running locally at `http://localhost:8000/docs`
 
 ---
 
@@ -283,11 +283,10 @@ Space will automatically build and deploy (2-3 minutes)
 ## 🔗 API Documentation
 
 ### **Swagger UI (Interactive)**
-- **Live:** [https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack/api/docs](https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack/api/docs)
 - **Local:** http://localhost:8000/docs
+- **Note:** Backend API runs internally on HF Spaces and is accessed through the frontend
 
 ### **ReDoc (Documentation)**
-- **Live:** [https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack/api/redoc](https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack/api/redoc)
 - **Local:** http://localhost:8000/redoc
 
 ---
@@ -611,7 +610,7 @@ If this project helped you, please give it a ⭐️!
 ### 🌟 **Live Demo**
 **[Try Agentic AI Now →](https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack)**
 
-**[API Documentation (Swagger) →](https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack/api/docs)**
+*(API documentation available when running locally)*
 
 ---
 
