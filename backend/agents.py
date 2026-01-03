@@ -84,29 +84,47 @@ llm = get_llm()
 def intent_classifier(state: AgentState) -> AgentState:
     """
     Classify user intent to determine which agent/tool to use
+    Intelligent routing with document awareness
     """
     user_query = state["user_query"].lower()
+    document_loaded = state.get("document_loaded", False)
     
-    # Intent classification logic
-    if any(word in user_query for word in ["weather", "temperature", "sunny", "rainy", "climate"]):
+    # Priority 1: Weather queries
+    if any(word in user_query for word in ["weather", "temperature", "sunny", "rainy", "climate", "forecast"]):
         intent = "weather"
+    
+    # Priority 2: Meeting queries
     elif any(word in user_query for word in ["meeting", "schedule", "calendar", "appointment"]):
         if any(word in user_query for word in ["create", "schedule", "add", "set up", "book"]):
             intent = "schedule_meeting"
         else:
             intent = "query_meeting"
-    elif any(word in user_query for word in ["document", "pdf", "file", "upload"]):
+    
+    # Priority 3: Questions about people/skills/experience (if document loaded)
+    elif document_loaded and any(phrase in user_query for phrase in [
+        "tell me about", "who is", "about ", "summary", "skills", "experience", 
+        "education", "work", "qualification", "profile", "resume", "cv",
+        "what does", "where does", "know", "proficient", "expert"
+    ]):
         intent = "document_query"
-    elif "?" in user_query or any(word in user_query for word in ["who", "what", "where", "when", "why", "how"]):
-        # Check if document is loaded
-        if state.get("document_loaded", False):
+    
+    # Priority 4: Explicit document references
+    elif any(word in user_query for word in ["document", "pdf", "file", "upload", "uploaded"]):
+        intent = "document_query"
+    
+    # Priority 5: General questions - check if document can answer
+    elif "?" in user_query or any(word in user_query for word in ["who", "what", "where", "when", "why", "how", "does", "is", "are"]):
+        # If document is loaded, try document first (smarter routing)
+        if document_loaded:
             intent = "document_query"
         else:
             intent = "general_search"
+    
+    # Default: Search the web
     else:
         intent = "general_search"
     
-    logger.info(f"🎯 Intent classified: {intent}")
+    logger.info(f"🎯 Intent: {intent} | Doc loaded: {document_loaded}")
     state["intent"] = intent
     return state
 

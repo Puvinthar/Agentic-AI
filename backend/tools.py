@@ -254,24 +254,26 @@ def query_document_tool(question: str) -> str:
                         temperature=0.1,
                     )
                     
-                    prompt = f"""You are an expert document analyst. Answer the user's question based on the document content.
+                    prompt = f"""You are a professional resume analyst. The user asked: "{question}"
 
 **DOCUMENT CONTENT:**
 {document_content}
 
-**USER QUESTION:** {question}
+**YOUR TASK:**
+Provide a BRIEF, TARGETED answer (maximum 100 words).
 
-**CRITICAL INSTRUCTIONS:**
-- Answer ONLY what the user asked - be specific and concise
-- If asked "about someone", provide: Name, Role/Title, Location, 2-3 key highlights
-- If asked about skills, list ONLY skills (don't include education/experience)
-- If asked about experience, mention ONLY work experience (not education)
-- If asked for summary, give a 3-4 sentence professional summary
-- DO NOT dump the entire document - extract and summarize intelligently
-- Use bullet points for lists, but keep them brief
-- Maximum 150 words unless user asks for "detailed" or "complete" information
+**RULES:**
+1. If asked "about someone" or "tell me about" → Give: Name, current role/status, location, top 3 highlights ONLY
+2. If asked about "skills" → List 3-5 key skills with NO explanations
+3. If asked about "experience" → Mention 1-2 most recent/relevant positions ONLY
+4. If asked "where" → Give location in ONE sentence
+5. If asked "what does X know" or "is X proficient" → Answer YES/NO + list 2-3 items max
+6. DO NOT copy-paste entire sections from the document
+7. DO NOT list everything - be selective and concise
+8. Use bullet points ONLY if listing 3+ items
+9. Maximum response length: 100 words
 
-**YOUR CONCISE ANSWER:**"""
+**CONCISE ANSWER:**"""
                     
                     response = llm.invoke(prompt)
                     answer = response.content.strip()
@@ -328,24 +330,24 @@ def query_document_tool(question: str) -> str:
                     temperature=0.2,
                 )
                 
-                prompt = f"""You are an expert document analyst. Answer the user's question based on the provided context.
+                prompt = f"""You are a resume analyst. The user asked: "{question}"
 
-**RELEVANT CONTEXT FROM DOCUMENT:**
+**RELEVANT CONTEXT:**
 {combined_context}
 
-**USER QUESTION:** {question}
+**YOUR TASK:**
+Answer in maximum 80 words.
 
-**CRITICAL INSTRUCTIONS:**
-- Answer ONLY what the user asked - be specific and targeted
-- Extract the most relevant information from the context
-- If asked "about someone", give: Name, Role, Location, 2-3 key points
-- If asked about skills, list ONLY skills (no experience/education)
-- If asked about experience, mention ONLY work history
-- DO NOT repeat the entire context - summarize intelligently
-- Keep answer under 100 words unless specifically asked for details
-- Use bullet points for clarity but keep them concise
+**RULES:**
+1. "about X" → Name + Role + 2-3 key points ONLY
+2. "skills" → List 3-5 skills, no descriptions
+3. "experience" → 1-2 most relevant jobs only
+4. "where/location" → City/Country in 1 sentence
+5. "does X know Y" → YES/NO + 2-3 items max
+6. Be extremely selective - DO NOT list everything
+7. Maximum 80 words
 
-**YOUR FOCUSED ANSWER:**"""
+**BRIEF ANSWER:**"""
                 
                 response = llm.invoke(prompt)
                 answer = response.content.strip()
