@@ -251,29 +251,38 @@ def query_document_tool(question: str) -> str:
                     llm = ChatGroq(
                         groq_api_key=groq_api_key,
                         model_name="llama-3.1-70b-versatile",
-                        temperature=0.1,
-                    )
-                    
-                    prompt = f"""You are a professional resume analyst. The user asked: "{question}"
+                    temperature=0.2,  # Low for precision, not creativity
 
-**DOCUMENT CONTENT:**
+<RESUME_CONTEXT>
 {document_content}
+</RESUME_CONTEXT>
 
-**YOUR TASK:**
-Provide a BRIEF, TARGETED answer (maximum 100 words).
+--- CRITICAL INSTRUCTIONS FOR AI ---
+⚠️ DO NOT COPY-PASTE FROM THE RESUME
+⚠️ DO NOT DUMP ENTIRE SECTIONS
+⚠️ THINK BEFORE YOU SPEAK
 
-**RULES:**
-1. If asked "about someone" or "tell me about" → Give: Name, current role/status, location, top 3 highlights ONLY
-2. If asked about "skills" → List 3-5 key skills with NO explanations
-3. If asked about "experience" → Mention 1-2 most recent/relevant positions ONLY
-4. If asked "where" → Give location in ONE sentence
-5. If asked "what does X know" or "is X proficient" → Answer YES/NO + list 2-3 items max
-6. DO NOT copy-paste entire sections from the document
-7. DO NOT list everything - be selective and concise
-8. Use bullet points ONLY if listing 3+ items
-9. Maximum response length: 100 words
+**STEP 1 - ANALYSIS:** Read the resume and identify ONLY the specific details that answer: "{question}"
 
-**CONCISE ANSWER:**"""
+**STEP 2 - SYNTHESIS:** Create a meaningful, concise answer by:
+• Extracting 2-4 key points (NOT everything)
+• Using your OWN professional wording
+• Being selective and strategic
+
+**STEP 3 - FORMATTING:**
+• Use bullet points ONLY for lists of 3+ items
+• Keep each point under 12 words
+• Professional, direct tone
+
+**STEP 4 - RESTRICTION:**
+• Maximum 100 words total
+• If info not in resume → say "This information is not mentioned"
+• Focus on what matters MOST for the question
+
+--- USER QUESTION ---
+{question}
+
+--- YOUR INTELLIGENT ANSWER (MAX 100 WORDS) ---"""
                     
                     response = llm.invoke(prompt)
                     answer = response.content.strip()
@@ -330,24 +339,35 @@ Provide a BRIEF, TARGETED answer (maximum 100 words).
                     temperature=0.2,
                 )
                 
-                prompt = f"""You are a resume analyst. The user asked: "{question}"
+                prompt = f"""You are a highly intelligent Resume Intelligence System.
 
-**RELEVANT CONTEXT:**
+<CANDIDATE_DATA>
 {combined_context}
+</CANDIDATE_DATA>
 
-**YOUR TASK:**
-Answer in maximum 80 words.
+--- MANDATORY PROCESSING RULES ---
+🚫 FORBIDDEN: Copy-pasting sections
+🚫 FORBIDDEN: Listing everything you see
+🚫 FORBIDDEN: Exceeding 80 words
+✅ REQUIRED: Think, analyze, synthesize
 
-**RULES:**
-1. "about X" → Name + Role + 2-3 key points ONLY
-2. "skills" → List 3-5 skills, no descriptions
-3. "experience" → 1-2 most relevant jobs only
-4. "where/location" → City/Country in 1 sentence
-5. "does X know Y" → YES/NO + 2-3 items max
-6. Be extremely selective - DO NOT list everything
-7. Maximum 80 words
+**ANALYSIS PHASE:**
+Question: "{question}"
+What are the 2-3 most relevant facts that answer this?
 
-**BRIEF ANSWER:**"""
+**SYNTHESIS PHASE:**
+Create a professional answer that:
+• Focuses on what's MOST important
+• Uses intelligent summarization
+• Sounds like a recruiter explaining (not a document dump)
+
+**OUTPUT CONSTRAINTS:**
+• Maximum 80 words
+• Bullet points only if 3+ items
+• Professional, concise tone
+• If not found → "Not mentioned in the document"
+
+--- YOUR INTELLIGENT SYNTHESIS (MAX 80 WORDS) ---"""
                 
                 response = llm.invoke(prompt)
                 answer = response.content.strip()
