@@ -22,7 +22,6 @@ An **intelligent, production-ready Agentic AI system** that autonomously reasons
 ### 🎨 **Modern ChatGPT-Inspired UI**
 - Professional purple/indigo gradient design
 - Light/Dark theme toggle
-- PS (Puvinthar Stephen) branding
 - Responsive card-based capability showcase
 - Real-time backend status indicator
 - Markdown rendering for rich responses
