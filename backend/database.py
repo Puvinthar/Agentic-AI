@@ -1,6 +1,6 @@
 """
 Database Connection and Session Management
-Handles PostgreSQL connection using SQLAlchemy
+Handles PostgreSQL (local/production) or SQLite (HF Spaces) using SQLAlchemy
 """
 from sqlalchemy import create_engine, text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
@@ -20,49 +20,77 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Database connection pieces (explicit host/port to avoid IPv6 localhost pitfalls)
-DB_USER = os.getenv("POSTGRES_USER", "postgres")
-DB_PASSWORD = os.getenv("POSTGRES_PASSWORD", "postgres")
-DB_HOST = os.getenv("POSTGRES_HOST", "127.0.0.1")
-DB_PORT = os.getenv("POSTGRES_PORT", "5432")
-DB_NAME = os.getenv("POSTGRES_DB", "agentic_db")
+# Detect environment
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+IS_HF_SPACES = os.getenv("SPACE_ID") is not None or ENVIRONMENT == "hf_spaces"
 
-# Database URLs (env overrides take precedence)
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-)
-SYNC_DATABASE_URL = os.getenv(
-    "SYNC_DATABASE_URL",
-    f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-)
+# Database configuration
+if IS_HF_SPACES or not os.getenv("DATABASE_URL"):
+    # Use SQLite for HF Spaces or when no DATABASE_URL is provided
+    logger.info("🔧 Using SQLite database (HF Spaces mode)")
+    DATABASE_URL = "sqlite+aiosqlite:///./agentic.db"
+    SYNC_DATABASE_URL = "sqlite:///./agentic.db"
+    
+    # Async Engine (SQLite)
+    async_engine = create_async_engine(
+        DATABASE_URL,
+        echo=False,
+        connect_args={"check_same_thread": False}
+    )
+    
+    # Sync Engine (SQLite)
+    sync_engine = create_engine(
+        SYNC_DATABASE_URL,
+        echo=False,
+        connect_args={"check_same_thread": False}
+    )
+else:
+    # Use PostgreSQL for local/production
+    logger.info("🔧 Using PostgreSQL database")
+    
+    # Database connection pieces (explicit host/port to avoid IPv6 localhost pitfalls)
+    DB_USER = os.getenv("POSTGRES_USER", "postgres")
+    DB_PASSWORD = os.getenv("POSTGRES_PASSWORD", "postgres")
+    DB_HOST = os.getenv("POSTGRES_HOST", "127.0.0.1")
+    DB_PORT = os.getenv("POSTGRES_PORT", "5432")
+    DB_NAME = os.getenv("POSTGRES_DB", "agentic_db")
 
-# Remove SSL query parameters from asyncpg URL (asyncpg doesn't support them in URL)
-if DATABASE_URL and "?" in DATABASE_URL:
-    DATABASE_URL = DATABASE_URL.split("?")[0]
+    # Database URLs (env overrides take precedence)
+    DATABASE_URL = os.getenv(
+        "DATABASE_URL",
+        f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    )
+    SYNC_DATABASE_URL = os.getenv(
+        "SYNC_DATABASE_URL",
+        f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    )
 
-# Async Engine (for FastAPI async endpoints)
-async_engine = create_async_engine(
-    DATABASE_URL,
-    echo=False,
-    pool_pre_ping=True,
-    pool_size=10,
-    max_overflow=20,
-    connect_args={"ssl": "require"} if "neon.tech" in DATABASE_URL or "aws" in DATABASE_URL else {}
-)
+    # Remove SSL query parameters from asyncpg URL (asyncpg doesn't support them in URL)
+    if DATABASE_URL and "?" in DATABASE_URL:
+        DATABASE_URL = DATABASE_URL.split("?")[0]
 
-# Sync Engine (for tools that don't support async)
-# Remove query params from SYNC_DATABASE_URL for psycopg2 compatibility
-SYNC_URL_CLEAN = SYNC_DATABASE_URL.split("?")[0] if SYNC_DATABASE_URL and "?" in SYNC_DATABASE_URL else SYNC_DATABASE_URL
+    # Async Engine (PostgreSQL)
+    async_engine = create_async_engine(
+        DATABASE_URL,
+        echo=False,
+        pool_pre_ping=True,
+        pool_size=10,
+        max_overflow=20,
+        connect_args={"ssl": "require"} if "neon.tech" in DATABASE_URL or "aws" in DATABASE_URL else {}
+    )
 
-sync_engine = create_engine(
-    SYNC_URL_CLEAN,
-    echo=False,
-    pool_pre_ping=True,
-    pool_size=5,
-    max_overflow=10,
-    connect_args={"sslmode": "require"} if "neon.tech" in SYNC_URL_CLEAN or "aws" in SYNC_URL_CLEAN else {}
-)
+    # Sync Engine (PostgreSQL)
+    # Remove query params from SYNC_DATABASE_URL for psycopg2 compatibility
+    SYNC_URL_CLEAN = SYNC_DATABASE_URL.split("?")[0] if SYNC_DATABASE_URL and "?" in SYNC_DATABASE_URL else SYNC_DATABASE_URL
+
+    sync_engine = create_engine(
+        SYNC_URL_CLEAN,
+        echo=False,
+        pool_pre_ping=True,
+        pool_size=5,
+        max_overflow=10,
+        connect_args={"sslmode": "require"} if "neon.tech" in SYNC_URL_CLEAN or "aws" in SYNC_URL_CLEAN else {}
+    )
 
 # Session factories
 AsyncSessionLocal = async_sessionmaker(
