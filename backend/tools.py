@@ -259,12 +259,25 @@ def query_document_tool(question: str) -> str:
         # If specific section detected, try to extract it directly from full document
         if detected_section:
             section_patterns = {
-                "skills": [r"(?i)(skills?|technical\s+skills?|technologies|competencies)(.*?)(?=\n\n|\nexperience|\neducation|$)",
-                          r"(?i)(programming\s+languages?|tools?|expertise)(.*?)(?=\n\n|\nexperience|\neducation|$)"],
-                "experience": [r"(?i)(experience|employment|work\s+history)(.*?)(?=\n\n|education|skills?|$)"],
-                "education": [r"(?i)(education|academic|qualifications?)(.*?)(?=\n\n|experience|skills?|$)"],
-                "summary": [r"(?i)(summary|profile|objective|about)(.*?)(?=\n\n|experience|education|skills?|$)"],
-                "projects": [r"(?i)(projects?|portfolio)(.*?)(?=\n\n|experience|education|$)"],
+                "skills": [
+                    r"(?i)(skills?|technical\s+skills?|technologies|competencies)[:\s]*\n(.*?)(?=\n\n[A-Z]|\nexperience|\neducation|$)",
+                    r"(?i)(programming\s+languages?|tools?|expertise)[:\s]*\n(.*?)(?=\n\n[A-Z]|\nexperience|\neducation|$)"
+                ],
+                "experience": [
+                    r"(?i)(experience|employment|work\s+history|professional\s+experience)[:\s]*\n(.*?)(?=\n\n[A-Z]|education|skills?|projects?|$)"
+                ],
+                "education": [
+                    r"(?i)(education|academic|qualifications?)[:\s]*\n(.*?)(?=\n\n[A-Z]|experience|skills?|$)"
+                ],
+                "summary": [
+                    r"(?i)(summary|profile|objective|about)[:\s]*\n(.*?)(?=\n\n[A-Z]|experience|education|skills?|$)"
+                ],
+                "projects": [
+                    r"(?i)(projects?|portfolio)[:\s]*\n(.*?)(?=\n\n[A-Z]|experience|education|$)"
+                ],
+                "contact": [
+                    r"(?i)(contact|email|phone)[:\s]*(.*?)(?=\n\n[A-Z]|experience|education|$)"
+                ]
             }
             
             import re
@@ -272,43 +285,69 @@ def query_document_tool(question: str) -> str:
                 for pattern in section_patterns[detected_section]:
                     match = re.search(pattern, document_content, re.DOTALL | re.IGNORECASE)
                     if match:
+                        # Get the section content (group 2 has the actual content)
                         section_content = match.group(0).strip()
-                        if len(section_content) > 50:  # Valid section found
-                            # Clean and limit content
-                            section_content = section_content[:1200]
-                            return f"📄 **{detected_section.title()} Section:**\n\n{section_content}"
+                        if len(section_content) > 30:  # Valid section found
+                            # Clean up: remove extra whitespace, limit length
+                            lines = section_content.split('\n')
+                            cleaned_lines = [line.strip() for line in lines if line.strip()]
+                            section_content = '\n'.join(cleaned_lines[:30])  # First 30 lines
+                            
+                            if len(section_content) > 100:
+                                return f"""📄 **{detected_section.title()} Section**
+
+{section_content}
+
+---
+💡 *Extracted from document. Ask more specific questions for detailed information.*"""
         
         # Fallback to semantic search with improved parameters
-        relevant_docs_with_scores = vector_store.similarity_search_with_score(question, k=3)
+        relevant_docs_with_scores = vector_store.similarity_search_with_score(question, k=4)
         
         if not relevant_docs_with_scores:
-            return "⚠️ No relevant information found in the document for your query."
+            return "⚠️ No relevant information found in the document for your query. Try rephrasing your question."
         
         # More lenient relevance threshold for better recall
-        RELEVANCE_THRESHOLD = 1.5  # Increased from 1.2
+        RELEVANCE_THRESHOLD = 1.8
         filtered_docs = [(doc, score) for doc, score in relevant_docs_with_scores if score < RELEVANCE_THRESHOLD]
         
         if not filtered_docs:
-            # If nothing passes threshold, use top result anyway
-            filtered_docs = [relevant_docs_with_scores[0]]
+            # If nothing passes threshold, use top 2 results
+            filtered_docs = relevant_docs_with_scores[:2]
         
-        # Take top 2 most relevant chunks
-        top_docs = [doc for doc, score in sorted(filtered_docs, key=lambda x: x[1])[:2]]
+        # Take top 3 most relevant chunks
+        top_docs = [doc for doc, score in sorted(filtered_docs, key=lambda x: x[1])[:3]]
         
-        # Extract context
+        # Extract context with better formatting
         context_parts = []
-        for doc in top_docs:
+        for i, doc in enumerate(top_docs, 1):
             content = doc.page_content.strip()
             if content:
-                context_parts.append(content[:700])
+                # Clean up the content
+                lines = content.split('\n')
+                cleaned_lines = [line.strip() for line in lines if line.strip()]
+                clean_content = '\n'.join(cleaned_lines)
+                
+                # Limit each chunk to 500 chars for readability
+                if len(clean_content) > 500:
+                    clean_content = clean_content[:500] + "..."
+                
+                if clean_content:
+                    context_parts.append(clean_content)
         
         if not context_parts:
-            return "⚠️ Document loaded but no relevant content found."
+            return "⚠️ Document loaded but no clear answer found. Try asking a more specific question."
         
+        # Combine all relevant parts
         context = "\n\n".join(context_parts)
         
-        # Return relevant information
-        return f"📄 **Document Answer:**\n\n{context}"
+        # Return formatted answer
+        return f"""📄 **Answer from Document**
+
+{context}
+
+---
+💡 *Need more details? Ask a follow-up question!*"""
         
     except Exception as e:
         logger.error(f"Document query error: {e}", exc_info=True)

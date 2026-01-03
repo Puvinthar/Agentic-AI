@@ -367,32 +367,32 @@ Example: "Create a meeting today in Chennai at 5pm if weather is good"
         
         result = f"""{weather_emoji} **Weather Conditions for {location}**
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📅 **Date:** {meeting_date.strftime('%B %d, %Y')} ({date_query})
-🌡️ **Temperature:** {temperature}°C
-☁️ **Condition:** {weather_condition}
-✅ **Status:** Favorable for meeting
+**Date:** {meeting_date.strftime('%B %d, %Y')} ({date_query})
+**Temperature:** {temperature}°C
+**Condition:** {weather_condition}
+**Status:** Favorable for meeting
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 {success_indicator} **{status_text}**
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 **Title:** {meeting_title}
-📅 **Date:** {meeting_date.strftime('%A, %B %d, %Y')}
-🕐 **Time:** {time_str} ({date_query})
-📍 **Location:** {location}"""
+**Title:** {meeting_title}
+**Date:** {meeting_date.strftime('%A, %B %d, %Y')}
+**Time:** {time_str} ({date_query})
+**Location:** {location}"""
 
         if description:
             result += f"""
-📝 **Description:** {description.capitalize()}"""
+**Description:** {description.capitalize()}"""
         
         result += f"""
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📊 **Summary**
+**Summary**
 {create_result}
 
-💡 **Tip:** Use the "+ Schedule Meeting" button in the sidebar for more options.
+💡 *Tip: Use the "+ Schedule Meeting" button for more options.*
         """
     else:
         # Parse temperature from weather result

@@ -171,7 +171,17 @@ function addMessage(text, role) {
     
     const contentEl = document.createElement('div');
     contentEl.className = 'message-content';
-    contentEl.textContent = text;
+    
+    // Preserve formatting: convert line breaks to <br> and handle special characters
+    const formattedText = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') // Bold
+        .replace(/\*(.+?)\*/g, '<em>$1</em>'); // Italic
+    
+    contentEl.innerHTML = formattedText;
     
     messageEl.appendChild(contentEl);
     messageContainer.appendChild(messageEl);
