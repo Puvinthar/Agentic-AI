@@ -1,16 +1,31 @@
-# 🤖 Agentic AI Backend
+# 🤖 Agentic AI - Full Stack
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.109-green.svg)
-![LangGraph](https://img.shields.io/badge/LangGraph-0.0.20-orange.svg)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue.svg)
+![LangGraph](https://img.shields.io/badge/LangGraph-0.2.28-orange.svg)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Hugging Face](https://img.shields.io/badge/🤗%20Hugging%20Face-Spaces-yellow.svg)
 
-An **intelligent, production-ready Agentic AI system** that autonomously reasons, decides which tools to use, fetches data, and responds naturally. Built with **FastAPI**, **LangGraph**, and **PostgreSQL**, featuring 4 specialized AI agents.
+An **intelligent, production-ready Agentic AI system** that autonomously reasons, decides which tools to use, fetches data, and responds naturally. Built with **FastAPI**, **LangGraph**, and **PostgreSQL**, featuring 4 specialized AI agents with a modern ChatGPT-inspired interface.
+
+## 🚀 Live Demo
+
+**Try it now:** [https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack](https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack)
+
+**API Documentation:** [https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack/api/docs](https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack/api/docs) (Swagger UI)
 
 ---
 
 ## 🌟 Features
+
+### 🎨 **Modern ChatGPT-Inspired UI**
+- Professional purple/indigo gradient design
+- Light/Dark theme toggle
+- PS (Puvinthar Stephen) branding
+- Responsive card-based capability showcase
+- Real-time backend status indicator
+- Markdown rendering for rich responses
 
 ### 🧠 **4 Intelligent Agents**
 
@@ -43,19 +58,20 @@ Query: "Who is the CEO of Google?" → Searches web
 - Intelligent meeting scheduling based on weather conditions
 - Checks existing meetings in database
 - Creates meetings only if weather is suitable
-- Provides reasoning for decisions
+- Beautiful tabular response format
+- Duplicate detection and smart recommendations
 
 **Examples:**
 ```
-"Verify tomorrow's weather and schedule a team meeting if the weather is good."
+"Schedule a meeting in Chennai at 5pm if weather is good"
+"Create a review meeting tomorrow in Bangalore"
 ```
 
-**Agent Logic:**
-1. Check tomorrow's weather
-2. Analyze if weather is good/bad
-3. Query database for existing meetings
-4. Create meeting if conditions are favorable
-5. Return reasoning and result
+**Response Format:**
+- Weather forecast with emoji indicators
+- Analysis table (Status & Condition)
+- Meeting details table (Title, Date, Time, Location)
+- Smart recommendations for bad weather
 
 #### 4️⃣ **Natural Language → Database Query Agent** 🗄️
 - Converts natural language to SQL queries
@@ -100,15 +116,19 @@ Return to User
 
 | Component | Technology |
 |-----------|-----------|
+| **Frontend** | Flask + Vanilla JavaScript |
+| **UI Framework** | Inter Font, CSS Variables |
 | **Backend Framework** | FastAPI |
 | **Agentic Orchestration** | LangGraph |
-| **LLM** | Groq (llama-3.1-70b) / OpenAI |
-| **Database** | PostgreSQL |
-| **ORM** | SQLAlchemy (Async) |
+| **LLM** | Groq (llama-3.1-70b-versatile) |
+| **Database** | Neon PostgreSQL (Cloud) |
+| **ORM** | SQLAlchemy (Async) + asyncpg |
 | **Vector Store** | FAISS |
+| **Embeddings** | HuggingFace sentence-transformers |
 | **Document Processing** | PyPDF, LangChain |
 | **Web Search** | DuckDuckGo |
 | **Weather API** | OpenWeatherMap |
+| **Deployment** | Hugging Face Spaces (Docker) |
 
 ---
 
@@ -117,20 +137,33 @@ Return to User
 ```
 agentic-backend/
 │
-├── main.py              # FastAPI entry point & endpoints
-├── agents.py            # LangGraph agentic logic (The Brain 🧠)
-├── tools.py             # Tool definitions (Weather, Search, RAG, DB)
-├── models.py            # SQLAlchemy database models
-├── database.py          # PostgreSQL connection & session management
+├── backend/
+│   ├── main.py              # FastAPI entry point & API endpoints
+│   ├── agents.py            # LangGraph agentic logic (4 agents)
+│   ├── tools.py             # Tool definitions (Weather, RAG, Search, DB)
+│   ├── models.py            # SQLAlchemy database models
+│   └── database.py          # PostgreSQL connection & async sessions
 │
-├── requirements.txt     # Python dependencies
-├── .env.example         # Environment variables template
-├── .gitignore          # Git ignore rules
+├── frontend/
+│   ├── server.py            # Flask frontend server
+│   ├── templates/
+│   │   └── index.html       # Main UI (ChatGPT-inspired)
+│   └── static/
+│       ├── css/
+│       │   └── style.css    # Professional purple/indigo theme
+│       └── js/
+│           └── app.js       # Frontend logic & API calls
 │
-├── Dockerfile          # Docker container definition
-├── docker-compose.yml  # Multi-container setup
+├── uploads/                 # Document upload directory
+├── requirements.txt         # Python dependencies
+├── Dockerfile.hf            # Hugging Face Space Docker config
+├── app-hf.py               # Combined app for HF deployment
+├── .env.example            # Environment variables template
 │
-└── README.md           # This file
+└── docs/                   # Documentation
+    ├── START_HERE.md
+    ├── QUICK_START_DEPLOYMENT.md
+    └── PROJECT_STRUCTURE.md
 ```
 
 ---
@@ -139,17 +172,29 @@ agentic-backend/
 
 ### **Prerequisites**
 - Python 3.11+
-- PostgreSQL 15+
+- Neon PostgreSQL account (free tier)
 - API Keys:
-  - [Groq API](https://console.groq.com/) (Recommended - Free & Fast)
-  - [OpenWeatherMap API](https://openweathermap.org/api)
+  - [Groq API](https://console.groq.com/) (Free & Fast)
+  - [OpenWeatherMap API](https://openweathermap.org/api) (Free tier)
 
-### **Method 1: Local Setup**
+### **Method 1: Try Live Demo** 🌐
+
+Visit: [https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack](https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack)
+
+**Features:**
+- ✅ No setup required
+- ✅ ChatGPT-inspired interface
+- ✅ Light/Dark theme toggle
+- ✅ All 4 agents ready to use
+- ✅ Document upload & RAG
+- ✅ Weather-based meeting scheduling
+
+### **Method 2: Local Setup**
 
 #### 1️⃣ Clone the Repository
 ```bash
-git clone https://github.com/yourusername/agentic-backend.git
-cd agentic-backend
+git clone https://github.com/Puvinthar/Agentic-AI.git
+cd Agentic-AI
 ```
 
 #### 2️⃣ Create Virtual Environment
@@ -173,64 +218,85 @@ pip install -r requirements.txt
 # Copy template
 cp .env.example .env
 
-# Edit .env with your API keys
-# DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/agentic_db
-# GROQ_API_KEY=your_groq_api_key_here
-# OPENWEATHER_API_KEY=your_openweather_api_key_here
+# Edit .env with your credentials:
+# DATABASE_URL=postgresql+asyncpg://user:pass@host/dbname
+# GROQ_API_KEY=gsk_your_groq_api_key
+# OPENWEATHER_API_KEY=your_openweather_api_key
 ```
 
-#### 5️⃣ Start PostgreSQL
-```bash
-# Using Docker
-docker run --name postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=agentic_db -p 5432:5432 -d postgres:15-alpine
+**Get Neon PostgreSQL URL:**
+1. Sign up at [neon.tech](https://neon.tech)
+2. Create a new project
+3. Copy connection string (use pooled connection)
+4. Replace `postgresql://` with `postgresql+asyncpg://`
 
-# OR install PostgreSQL locally
-```
-
-#### 6️⃣ Run the Application
+#### 5️⃣ Run the Application
 ```bash
+# Start backend
+cd backend
 python main.py
-# OR
-uvicorn main:app --reload --port 8000
+
+# In another terminal, start frontend
+cd frontend
+python server.py
 ```
 
-#### 7️⃣ Access the API
-- **API Docs:** http://localhost:8000/docs
+#### 6️⃣ Access the Application
+- **Frontend UI:** http://localhost:7860
+- **Backend API:** http://localhost:8000
+- **API Docs (Swagger):** http://localhost:8000/docs
 - **Health Check:** http://localhost:8000/api/health
 
 ---
 
-### **Method 2: Docker Setup** 🐳
+### **Method 3: Deploy to Hugging Face Spaces** 🤗
 
-#### 1️⃣ Create `.env` File
+#### 1️⃣ Create New Space
+1. Go to [huggingface.co/spaces](https://huggingface.co/spaces)
+2. Click "Create new Space"
+3. Choose **Docker** as SDK
+4. Clone the space repository
+
+#### 2️⃣ Push Code
 ```bash
-cp .env.example .env
-# Add your API keys
+git clone https://huggingface.co/spaces/YOUR_USERNAME/YOUR_SPACE_NAME
+cd YOUR_SPACE_NAME
+cp -r path/to/Agentic-AI/* .
+git add .
+git commit -m "Initial deployment"
+git push
 ```
 
-#### 2️⃣ Start Services
-```bash
-docker-compose up -d
-```
+#### 3️⃣ Add Secrets
+In Space Settings → Repository Secrets, add:
+- `DATABASE_URL` - Your Neon PostgreSQL connection string
+- `GROQ_API_KEY` - Your Groq API key
+- `OPENWEATHER_API_KEY` - Your OpenWeather API key
 
-#### 3️⃣ Check Status
-```bash
-docker-compose ps
-```
+#### 4️⃣ Wait for Build
+Space will automatically build and deploy (2-3 minutes)
 
-#### 4️⃣ View Logs
-```bash
-docker-compose logs -f backend
-```
+**Your app will be live at:** `https://huggingface.co/spaces/USERNAME/SPACE_NAME`
 
-#### 5️⃣ Stop Services
-```bash
-docker-compose down
-```
+---
+
+## 🔗 API Documentation
+
+### **Swagger UI (Interactive)**
+- **Live:** [https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack/api/docs](https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack/api/docs)
+- **Local:** http://localhost:8000/docs
+
+### **ReDoc (Documentation)**
+- **Live:** [https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack/api/redoc](https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack/api/redoc)
+- **Local:** http://localhost:8000/redoc
 
 ---
 
 ## 📡 API Endpoints
+
+### **Base URLs**
+- **Live:** `https://lossleo-agentic-ai-fullstack.hf.space/api`
+- **Local:** `http://localhost:8000/api`
 
 ### **1. Chat Endpoint** 💬
 ```bash
@@ -238,15 +304,15 @@ POST /api/chat
 Content-Type: application/json
 
 {
-  "query": "What is the weather in Chennai today?"
+  "query": "Schedule a meeting in Chennai at 5pm if weather is good"
 }
 ```
 
 **Response:**
 ```json
 {
-  "response": "🌤️ Weather Information for Chennai\n📅 Date: 2026-01-01\n🌡️ Temperature: 32°C...",
-  "timestamp": "2026-01-01T10:30:00"
+  "response": "🌤️ Weather Forecast for Chennai...\n\n### ☁️ Weather Analysis\n| Status | Condition |\n|--------|-----------|...",
+  "timestamp": "2026-01-03T10:30:00"
 }
 ```
 
@@ -507,10 +573,10 @@ This project is licensed under the MIT License.
 
 ## 👤 Author
 
-**Your Name**
-- GitHub: [@yourusername](https://github.com/yourusername)
-- LinkedIn: [Your LinkedIn](https://linkedin.com/in/yourprofile)
-- Email: your.email@example.com
+**Puvinthar Stephen**
+- **GitHub:** [@Puvinthar](https://github.com/Puvinthar)
+- **Hugging Face:** [@lossleo](https://huggingface.co/lossleo)
+- **Live Demo:** [Agentic AI Fullstack](https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack)
 
 ---
 
@@ -521,14 +587,16 @@ This project is licensed under the MIT License.
 - [FastAPI](https://fastapi.tiangolo.com/) - Modern web framework
 - [Groq](https://groq.com/) - Ultra-fast LLM inference
 - [OpenWeatherMap](https://openweathermap.org/) - Weather data
+- [Neon](https://neon.tech/) - Serverless PostgreSQL
+- [Hugging Face](https://huggingface.co/) - Hosting platform
 
 ---
 
 ## 📞 Support
 
 If you have any questions or issues:
-- Open an issue on GitHub
-- Email: your.email@example.com
+- Open an issue on [GitHub](https://github.com/Puvinthar/Agentic-AI/issues)
+- Try the [Live Demo](https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack)
 
 ---
 
@@ -539,5 +607,18 @@ If this project helped you, please give it a ⭐️!
 ---
 
 <div align="center">
-  <strong>Built with ❤️ using FastAPI, LangGraph, and PostgreSQL</strong>
+  
+### 🌟 **Live Demo**
+**[Try Agentic AI Now →](https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack)**
+
+**[API Documentation (Swagger) →](https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack/api/docs)**
+
+---
+
+**Built with ❤️ by Puvinthar Stephen**
+
+*Powered by FastAPI, LangGraph, Groq LLM, and Neon PostgreSQL*
+
+**⭐ Star this repo if it helped you!**
+
 </div>
