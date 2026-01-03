@@ -13,7 +13,9 @@ An **intelligent, production-ready Agentic AI system** that autonomously reasons
 
 **Try it now:** [https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack](https://huggingface.co/spaces/lossleo/Agentic-AI-fullstack)
 
-**Note:** API documentation is available when running locally at `http://localhost:8000/docs`
+**API Documentation (Swagger):** [https://lossleo-agentic-ai-backend-docs.hf.space/docs](https://lossleo-agentic-ai-backend-docs.hf.space/docs)
+
+**Local API Docs:** `http://localhost:8000/docs` (when running locally)
 
 ---
 
