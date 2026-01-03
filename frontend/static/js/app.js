@@ -169,8 +169,14 @@ function addMessage(text, role) {
     const messageEl = document.createElement('div');
     messageEl.className = `message ${role}`;
     
-    const contentEl = document.createElement('div');
-    contentEl.className = 'message-content';
+    // Create avatar icon
+    const avatarEl = document.createElement('div');
+    avatarEl.className = 'message-avatar';
+    avatarEl.innerHTML = role === 'user' ? '👤' : '🤖';
+    
+    // Create message bubble
+    const bubbleEl = document.createElement('div');
+    bubbleEl.className = 'message-bubble';
     
     // Preserve formatting: convert line breaks to <br> and handle special characters
     const formattedText = text
@@ -181,9 +187,17 @@ function addMessage(text, role) {
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>') // Bold
         .replace(/\*(.+?)\*/g, '<em>$1</em>'); // Italic
     
-    contentEl.innerHTML = formattedText;
+    bubbleEl.innerHTML = formattedText;
     
-    messageEl.appendChild(contentEl);
+    // Assemble message (avatar position depends on role)
+    if (role === 'user') {
+        messageEl.appendChild(bubbleEl);
+        messageEl.appendChild(avatarEl);
+    } else {
+        messageEl.appendChild(avatarEl);
+        messageEl.appendChild(bubbleEl);
+    }
+    
     messageContainer.appendChild(messageEl);
     
     // Scroll to bottom
@@ -193,16 +207,27 @@ function addMessage(text, role) {
 function addLoadingMessage() {
     const messageContainer = document.getElementById('messageContainer');
     const messageEl = document.createElement('div');
-    messageEl.className = 'message loading';
+    messageEl.className = 'message assistant loading';
     messageEl.id = 'loadingMessage';
     
-    messageEl.innerHTML = `
+    // Add avatar
+    const avatarEl = document.createElement('div');
+    avatarEl.className = 'message-avatar';
+    avatarEl.innerHTML = '🤖';
+    
+    // Add loading bubble
+    const bubbleEl = document.createElement('div');
+    bubbleEl.className = 'message-bubble';
+    bubbleEl.innerHTML = `
         <div class="loading-dots">
             <div class="loading-dot"></div>
             <div class="loading-dot"></div>
             <div class="loading-dot"></div>
         </div>
     `;
+    
+    messageEl.appendChild(avatarEl);
+    messageEl.appendChild(bubbleEl);
     
     messageContainer.appendChild(messageEl);
     messageContainer.parentElement.scrollTop = messageContainer.parentElement.scrollHeight;
