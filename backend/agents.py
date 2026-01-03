@@ -365,77 +365,67 @@ Example: "Create a meeting today in Chennai at 5pm if weather is good"
         success_indicator = "✅" if "successfully scheduled" in create_result.lower() else "⚠️"
         status_text = "Meeting Scheduled Successfully" if "successfully scheduled" in create_result.lower() else "Meeting Already Exists"
         
-        result = f"""### {weather_emoji} Weather Conditions for {location}
+        result = f"""{weather_emoji} **Weather Conditions for {location}**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📅 **Date:** {meeting_date.strftime('%B %d, %Y')} ({date_query})
+🌡️ **Temperature:** {temperature}°C
+☁️ **Condition:** {weather_condition}
+✅ **Status:** Favorable for meeting
 
-| Parameter | Value |
-|-----------|-------|
-| **Date** | {meeting_date.strftime('%B %d, %Y')} ({date_query}) |
-| **Temperature** | {temperature}°C |
-| **Condition** | {weather_condition} |
-| **Status** | {weather_emoji} Favorable for meeting |
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
----
-
-### {success_indicator} {status_text}
-
-| Meeting Information | Details |
-|---------------------|---------|
-| **Title** | {meeting_title} |
-| **Date** | {meeting_date.strftime('%A, %B %d, %Y')} |
-| **Time** | {time_str} ({date_query}) |
-| **Location** | {location} |"""
+{success_indicator} **{status_text}**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 **Title:** {meeting_title}
+📅 **Date:** {meeting_date.strftime('%A, %B %d, %Y')}
+🕐 **Time:** {time_str} ({date_query})
+📍 **Location:** {location}"""
 
         if description:
             result += f"""
-| **Description** | {description.capitalize()} |"""
+📝 **Description:** {description.capitalize()}"""
         
         result += f"""
 
----
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-### 📊 Summary
-
+📊 **Summary**
 {create_result}
 
----
-
-💡 **Tip:** You can use the "+ Schedule Meeting" button in the sidebar for more scheduling options.
+💡 **Tip:** Use the "+ Schedule Meeting" button in the sidebar for more options.
         """
     else:
         # Parse temperature from weather result
         temp_match = re.search(r'Temperature:\s*([0-9.]+)°C', weather_result)
         temperature = temp_match.group(1) if temp_match else "N/A"
         
-        result = f"""### {weather_emoji} Weather Conditions for {location}
+        result = f"""{weather_emoji} **Weather Conditions for {location}**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📅 **Date:** {meeting_date.strftime('%B %d, %Y')} ({date_query})
+🌡️ **Temperature:** {temperature}°C
+☁️ **Condition:** {weather_condition}
+❌ **Status:** Not ideal for in-person meeting
 
-| Parameter | Value |
-|-----------|-------|
-| **Date** | {meeting_date.strftime('%B %d, %Y')} ({date_query}) |
-| **Temperature** | {temperature}°C |
-| **Condition** | {weather_condition} |
-| **Status** | ❌ Not ideal for in-person meeting |
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
----
+⚠️ **Meeting Recommendation**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-### ⚠️ Meeting Recommendation
+Due to unfavorable weather ({weather_condition}), we recommend:
 
-Due to unfavorable weather conditions ({weather_condition}), we recommend:
+🏠 **Virtual Meeting** → Schedule online meeting instead
+📅 **Reschedule** → Choose a day with better weather  
+🌤️ **Check Forecast** → Review upcoming weather conditions
 
-| Option | Recommendation |
-|--------|---------------|
-| 🏠 **Virtual Meeting** | Schedule online meeting instead |
-| 📅 **Reschedule** | Choose a day with better weather |
-| 🌤️ **Check Forecast** | Review upcoming weather conditions |
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
----
+💡 **What would you like to do?**
 
-### 💡 What would you like to do?
+• Create a **virtual meeting** for {date_query}?
+• Check **weather forecast** for another day?
+• Get **alternative time** suggestions?
 
-- Create a **virtual meeting** for {date_query}?
-- Check **weather forecast** for another day?
-- Get **alternative time** suggestions?
-
-*Use the "+ Schedule Meeting" button to proceed with scheduling options.*
+*Use the "+ Schedule Meeting" button to proceed with scheduling.*
         """
     
     state["tool_result"] = result
