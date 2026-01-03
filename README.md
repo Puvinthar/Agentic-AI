@@ -1,0 +1,543 @@
+# 🤖 Agentic AI Backend
+
+![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.109-green.svg)
+![LangGraph](https://img.shields.io/badge/LangGraph-0.0.20-orange.svg)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue.svg)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+
+An **intelligent, production-ready Agentic AI system** that autonomously reasons, decides which tools to use, fetches data, and responds naturally. Built with **FastAPI**, **LangGraph**, and **PostgreSQL**, featuring 4 specialized AI agents.
+
+---
+
+## 🌟 Features
+
+### 🧠 **4 Intelligent Agents**
+
+#### 1️⃣ **Weather Intelligence Agent** 🌤️
+- Natural language weather queries
+- Supports past, current, and future weather
+- OpenWeatherMap API integration
+
+**Examples:**
+```
+"What is the weather in Chennai today?"
+"What was the weather in Bengaluru yesterday?"
+"What will the weather be like in London tomorrow?"
+```
+
+#### 2️⃣ **Document Understanding + Web Intelligence Agent** 📄
+- Upload and analyze PDF/TXT documents
+- RAG (Retrieval Augmented Generation) for Q&A
+- Automatic fallback to web search if answer not in document
+- FAISS vector store for semantic search
+
+**Examples:**
+```
+Upload: company_policy.pdf
+Query: "What is the leave policy?" → Answers from document
+Query: "Who is the CEO of Google?" → Searches web
+```
+
+#### 3️⃣ **Meeting Scheduling + Weather Reasoning Agent** 📅
+- Intelligent meeting scheduling based on weather conditions
+- Checks existing meetings in database
+- Creates meetings only if weather is suitable
+- Provides reasoning for decisions
+
+**Examples:**
+```
+"Verify tomorrow's weather and schedule a team meeting if the weather is good."
+```
+
+**Agent Logic:**
+1. Check tomorrow's weather
+2. Analyze if weather is good/bad
+3. Query database for existing meetings
+4. Create meeting if conditions are favorable
+5. Return reasoning and result
+
+#### 4️⃣ **Natural Language → Database Query Agent** 🗄️
+- Converts natural language to SQL queries
+- Understands temporal queries (today, tomorrow, next week)
+- Pattern learning for complex queries
+
+**Examples:**
+```
+"Show all meetings scheduled tomorrow"
+"Do we have any meetings today?"
+"List meetings next week"
+"Is there any review meeting?"
+```
+
+---
+
+## 🏗️ Architecture
+
+```
+User Question
+     ↓
+🤖 AI Reasoning Agent (LangGraph)
+     ↓
+  Intent Classification
+     ↓
+┌────────────────────────────────┐
+│  Weather  │  Document  │  DB   │
+│   Tool    │    RAG     │ Tool  │
+│           │  + Search  │       │
+└────────────────────────────────┘
+     ↓
+Execute Action
+     ↓
+Generate Natural Response (LLM)
+     ↓
+Return to User
+```
+
+---
+
+## 🛠️ Tech Stack
+
+| Component | Technology |
+|-----------|-----------|
+| **Backend Framework** | FastAPI |
+| **Agentic Orchestration** | LangGraph |
+| **LLM** | Groq (llama-3.1-70b) / OpenAI |
+| **Database** | PostgreSQL |
+| **ORM** | SQLAlchemy (Async) |
+| **Vector Store** | FAISS |
+| **Document Processing** | PyPDF, LangChain |
+| **Web Search** | DuckDuckGo |
+| **Weather API** | OpenWeatherMap |
+
+---
+
+## 📁 Project Structure
+
+```
+agentic-backend/
+│
+├── main.py              # FastAPI entry point & endpoints
+├── agents.py            # LangGraph agentic logic (The Brain 🧠)
+├── tools.py             # Tool definitions (Weather, Search, RAG, DB)
+├── models.py            # SQLAlchemy database models
+├── database.py          # PostgreSQL connection & session management
+│
+├── requirements.txt     # Python dependencies
+├── .env.example         # Environment variables template
+├── .gitignore          # Git ignore rules
+│
+├── Dockerfile          # Docker container definition
+├── docker-compose.yml  # Multi-container setup
+│
+└── README.md           # This file
+```
+
+---
+
+## 🚀 Quick Start
+
+### **Prerequisites**
+- Python 3.11+
+- PostgreSQL 15+
+- API Keys:
+  - [Groq API](https://console.groq.com/) (Recommended - Free & Fast)
+  - [OpenWeatherMap API](https://openweathermap.org/api)
+
+### **Method 1: Local Setup**
+
+#### 1️⃣ Clone the Repository
+```bash
+git clone https://github.com/yourusername/agentic-backend.git
+cd agentic-backend
+```
+
+#### 2️⃣ Create Virtual Environment
+```bash
+python -m venv venv
+
+# Windows
+venv\Scripts\activate
+
+# Linux/Mac
+source venv/bin/activate
+```
+
+#### 3️⃣ Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+#### 4️⃣ Set Up Environment Variables
+```bash
+# Copy template
+cp .env.example .env
+
+# Edit .env with your API keys
+# DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/agentic_db
+# GROQ_API_KEY=your_groq_api_key_here
+# OPENWEATHER_API_KEY=your_openweather_api_key_here
+```
+
+#### 5️⃣ Start PostgreSQL
+```bash
+# Using Docker
+docker run --name postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=agentic_db -p 5432:5432 -d postgres:15-alpine
+
+# OR install PostgreSQL locally
+```
+
+#### 6️⃣ Run the Application
+```bash
+python main.py
+# OR
+uvicorn main:app --reload --port 8000
+```
+
+#### 7️⃣ Access the API
+- **API Docs:** http://localhost:8000/docs
+- **Health Check:** http://localhost:8000/api/health
+
+---
+
+### **Method 2: Docker Setup** 🐳
+
+#### 1️⃣ Create `.env` File
+```bash
+cp .env.example .env
+# Add your API keys
+```
+
+#### 2️⃣ Start Services
+```bash
+docker-compose up -d
+```
+
+#### 3️⃣ Check Status
+```bash
+docker-compose ps
+```
+
+#### 4️⃣ View Logs
+```bash
+docker-compose logs -f backend
+```
+
+#### 5️⃣ Stop Services
+```bash
+docker-compose down
+```
+
+---
+
+## 📡 API Endpoints
+
+### **1. Chat Endpoint** 💬
+```bash
+POST /api/chat
+Content-Type: application/json
+
+{
+  "query": "What is the weather in Chennai today?"
+}
+```
+
+**Response:**
+```json
+{
+  "response": "🌤️ Weather Information for Chennai\n📅 Date: 2026-01-01\n🌡️ Temperature: 32°C...",
+  "timestamp": "2026-01-01T10:30:00"
+}
+```
+
+### **2. Upload Document** 📄
+```bash
+POST /api/upload
+Content-Type: multipart/form-data
+
+file: your_document.pdf
+```
+
+### **3. Get Meetings** 📅
+```bash
+GET /api/meetings?date=tomorrow
+```
+
+### **4. Create Meeting** ➕
+```bash
+POST /api/meetings
+Content-Type: application/json
+
+{
+  "title": "Team Standup",
+  "scheduled_date": "2026-01-02T10:00:00",
+  "location": "Conference Room A",
+  "description": "Daily sync"
+}
+```
+
+### **5. Health Check** ✅
+```bash
+GET /api/health
+```
+
+---
+
+## 🎯 Usage Examples
+
+### **Example 1: Weather Query**
+```bash
+curl -X POST "http://localhost:8000/api/chat" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What is the weather in Chennai today?"}'
+```
+
+### **Example 2: Document Q&A**
+```bash
+# Upload document
+curl -X POST "http://localhost:8000/api/upload" \
+  -F "file=@resume.pdf"
+
+# Ask question
+curl -X POST "http://localhost:8000/api/chat" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What are my technical skills?"}'
+```
+
+### **Example 3: Meeting Scheduling with Weather**
+```bash
+curl -X POST "http://localhost:8000/api/chat" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Schedule a team meeting if tomorrow\'s weather is good in Bangalore"}'
+```
+
+### **Example 4: Database Query**
+```bash
+curl -X POST "http://localhost:8000/api/chat" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Show all meetings scheduled tomorrow"}'
+```
+
+---
+
+## 🧪 Testing
+
+### **Test with cURL**
+```bash
+# Health check
+curl http://localhost:8000/api/health
+
+# Chat
+curl -X POST http://localhost:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"query": "test query"}'
+```
+
+### **Test with Python**
+```python
+import requests
+
+# Chat endpoint
+response = requests.post(
+    "http://localhost:8000/api/chat",
+    json={"query": "What is the weather in Chennai?"}
+)
+print(response.json())
+```
+
+---
+
+## 🔧 Configuration
+
+### **Environment Variables**
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `DATABASE_URL` | PostgreSQL connection (async) | Yes |
+| `SYNC_DATABASE_URL` | PostgreSQL connection (sync) | Yes |
+| `GROQ_API_KEY` | Groq API key for LLM | Recommended |
+| `OPENAI_API_KEY` | OpenAI API key (alternative) | Optional |
+| `OPENWEATHER_API_KEY` | OpenWeatherMap API key | Yes |
+| `DEBUG` | Enable debug mode | No |
+| `LOG_LEVEL` | Logging level | No |
+
+---
+
+## 🎨 Innovative Features
+
+### **What Makes This Project Stand Out:**
+
+1. **🧠 True Agentic Behavior**
+   - Intelligent intent classification
+   - Dynamic tool selection
+   - Multi-step reasoning (Agent 3)
+
+2. **🔄 Hybrid RAG + Web Search**
+   - Document Q&A with automatic web fallback
+   - Semantic search using FAISS embeddings
+
+3. **🌤️ Weather-Based Decision Making**
+   - Agent analyzes weather conditions
+   - Makes logical decisions (good/bad weather)
+   - Schedules meetings intelligently
+
+4. **🗣️ Natural Language to SQL**
+   - Understands temporal queries
+   - Pattern learning for complex queries
+   - No manual SQL writing needed
+
+5. **📦 Production-Ready**
+   - Docker support
+   - Async database operations
+   - Comprehensive error handling
+   - Structured logging
+   - API documentation
+
+6. **🎯 Modular Architecture**
+   - Easy to extend with new agents
+   - Clean separation of concerns
+   - Type hints throughout
+
+---
+
+## 📊 Database Schema
+
+### **Meetings Table**
+```sql
+CREATE TABLE meetings (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    scheduled_date TIMESTAMP NOT NULL,
+    location VARCHAR(255),
+    weather_condition VARCHAR(100),
+    is_weather_dependent BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### **Documents Table**
+```sql
+CREATE TABLE documents (
+    id SERIAL PRIMARY KEY,
+    filename VARCHAR(255) NOT NULL,
+    filepath VARCHAR(500) NOT NULL,
+    file_type VARCHAR(50) NOT NULL,
+    upload_date TIMESTAMP DEFAULT NOW(),
+    processed BOOLEAN DEFAULT FALSE
+);
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### **Issue: Database Connection Failed**
+```bash
+# Check if PostgreSQL is running
+docker ps
+
+# Check connection string in .env
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/agentic_db
+```
+
+### **Issue: LLM Not Responding**
+```bash
+# Verify API key in .env
+GROQ_API_KEY=your_actual_api_key
+
+# Check logs
+docker-compose logs backend
+```
+
+### **Issue: Document Upload Fails**
+```bash
+# Ensure uploads directory exists
+mkdir uploads
+
+# Check file permissions
+chmod 755 uploads
+```
+
+---
+
+## 🚀 Deployment
+
+### **Deploy to Cloud**
+
+#### **Heroku**
+```bash
+heroku create agentic-backend
+heroku addons:create heroku-postgresql:hobby-dev
+git push heroku main
+```
+
+#### **Railway**
+1. Connect GitHub repository
+2. Add PostgreSQL service
+3. Set environment variables
+4. Deploy
+
+#### **AWS ECS**
+1. Build Docker image
+2. Push to ECR
+3. Create ECS task definition
+4. Deploy to Fargate
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 📝 License
+
+This project is licensed under the MIT License.
+
+---
+
+## 👤 Author
+
+**Your Name**
+- GitHub: [@yourusername](https://github.com/yourusername)
+- LinkedIn: [Your LinkedIn](https://linkedin.com/in/yourprofile)
+- Email: your.email@example.com
+
+---
+
+## 🙏 Acknowledgments
+
+- [LangChain](https://langchain.com/) - LLM framework
+- [LangGraph](https://github.com/langchain-ai/langgraph) - Agentic orchestration
+- [FastAPI](https://fastapi.tiangolo.com/) - Modern web framework
+- [Groq](https://groq.com/) - Ultra-fast LLM inference
+- [OpenWeatherMap](https://openweathermap.org/) - Weather data
+
+---
+
+## 📞 Support
+
+If you have any questions or issues:
+- Open an issue on GitHub
+- Email: your.email@example.com
+
+---
+
+## ⭐ Show Your Support
+
+If this project helped you, please give it a ⭐️!
+
+---
+
+<div align="center">
+  <strong>Built with ❤️ using FastAPI, LangGraph, and PostgreSQL</strong>
+</div>
