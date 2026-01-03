@@ -47,15 +47,20 @@ async def lifespan(app: FastAPI):
     """
     logger.info("🚀 Starting Agentic AI Backend...")
     
-    # Test database connection
-    db_connected = await test_connection()
+    # Test database connection with timeout (non-blocking)
+    try:
+        db_connected = await test_connection()
+        
+        if db_connected:
+            # Initialize database tables
+            await init_db()
+            logger.info("✅ Database initialized successfully")
+        else:
+            logger.warning("⚠️ Starting without database. Meeting scheduler features will be unavailable.")
+    except Exception as e:
+        logger.warning(f"⚠️ Database initialization failed: {e}. App starting without database features.")
     
-    if db_connected:
-        # Initialize database tables
-        await init_db()
-        logger.info("✅ Database initialized successfully")
-    else:
-        logger.warning("⚠️ Database connection failed. Please check your DATABASE_URL.")
+    logger.info("✅ Backend API is ready!")
     
     yield
     

@@ -116,16 +116,22 @@ def get_sync_session() -> Session:
 
 async def test_connection():
     """
-    Test database connection
+    Test database connection with timeout
     """
+    import asyncio
+    
     try:
-        async with async_engine.connect() as conn:
-            result = await conn.execute(text("SELECT 1"))
-            # Just executing is enough to test connection
+        # Add 5-second timeout to prevent hanging
+        async with asyncio.timeout(5):
+            async with async_engine.connect() as conn:
+                await conn.execute(text("SELECT 1"))
         logger.info("✅ Database connection successful")
         return True
+    except asyncio.TimeoutError:
+        logger.warning("⚠️ Database connection timeout (5s). App will start without database.")
+        return False
     except Exception as e:
-        logger.error(f"❌ Database connection failed: {e}", exc_info=True)
+        logger.warning(f"⚠️ Database connection failed: {e}. App will start without database.")
         return False
 
 
