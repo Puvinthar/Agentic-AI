@@ -49,6 +49,14 @@ logs/
 *.db
 *.sqlite3
 
+# HF Space Clone
+Agentic-AI-fullstack/
+agentic-ai-frontend/
+
+# Backup files
+*_backup.*
+*.bak
+
 # OS
 .DS_Store
 Thumbs.db
