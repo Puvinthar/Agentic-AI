@@ -56,10 +56,10 @@ def get_llm():
     openai_api_key = os.getenv("OPENAI_API_KEY")
     
     if groq_api_key and groq_api_key != "your_groq_api_key_here":
-        logger.info("Using Groq LLM (llama-3.1-70b-versatile)")
+        logger.info("Using Groq LLM (llama-3.3-70b-versatile)")
         return ChatGroq(
             groq_api_key=groq_api_key,
-            model_name="llama-3.1-70b-versatile",
+            model_name="llama-3.3-70b-versatile",
             temperature=0.3,
         )
     elif openai_api_key and openai_api_key != "your_openai_api_key_here":

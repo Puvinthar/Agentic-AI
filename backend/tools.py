@@ -250,8 +250,11 @@ def query_document_tool(question: str) -> str:
                 try:
                     llm = ChatGroq(
                         groq_api_key=groq_api_key,
-                        model_name="llama-3.1-70b-versatile",
-                    temperature=0.2,  # Low for precision, not creativity
+                        model_name="llama-3.3-70b-versatile",
+                        temperature=0.2,  # Low for precision, not creativity
+                    )
+                    
+                    prompt = f"""You are a highly intelligent AI Recruiting Assistant analyzing a candidate's resume.
 
 <RESUME_CONTEXT>
 {document_content}
@@ -335,7 +338,7 @@ def query_document_tool(question: str) -> str:
             try:
                 llm = ChatGroq(
                     groq_api_key=groq_api_key,
-                    model_name="llama-3.1-70b-versatile",
+                    model_name="llama-3.3-70b-versatile",
                     temperature=0.2,
                 )
                 
