@@ -202,23 +202,27 @@ def document_agent(state: AgentState) -> AgentState:
     # Query document with improved section-aware RAG
     doc_result = query_document_tool(user_query)
     
-    # Only fall back to web search if explicitly about general knowledge, not document content
-    query_lower = user_query.lower()
-    is_document_specific = any(word in query_lower for word in ["skills", "experience", "education", "resume", "cv", "about", "summary", "projects", "work"])
+    # CRITICAL: If document is loaded, NEVER fall back to web search
+    # The LLM should handle "no info found" cases in its response
+    document_loaded = state.get("document_loaded", False)
     
-    # Check if document doesn't have relevant answer AND it's not a document-specific query
-    if not is_document_specific and any(phrase in doc_result for phrase in ["No document loaded", "does not contain relevant", "No relevant information"]):
-        # Fallback to web search for general queries
-        logger.info("📄 General query, using web search...")
-        search_result = web_search_tool(user_query)
-        
-        if search_result and "❌" not in search_result and "⚠️" not in search_result:
-            state["tool_result"] = f"📄 **Document Status:** No document loaded.\n\n{search_result}"
+    if document_loaded:
+        # Document is loaded - always use document result (even if it says "not found")
+        state["tool_result"] = doc_result
+        logger.info("📄 Document query completed (document loaded, no web fallback)")
+    else:
+        # No document loaded - check if we got an error message
+        if any(phrase in doc_result for phrase in ["No document loaded", "❌"]):
+            # Try web search as fallback only when NO document exists
+            logger.info("📄 No document, trying web search fallback...")
+            search_result = web_search_tool(user_query)
+            
+            if search_result and "❌" not in search_result and "⚠️" not in search_result:
+                state["tool_result"] = f"📄 **Document Status:** No document loaded.\n\n{search_result}"
+            else:
+                state["tool_result"] = doc_result
         else:
             state["tool_result"] = doc_result
-    else:
-        # Document has relevant answer or it's document-specific query - use it directly
-        state["tool_result"] = doc_result
     
     logger.info("📄 Document query completed")
     return state
