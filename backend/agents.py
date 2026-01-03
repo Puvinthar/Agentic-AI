@@ -295,72 +295,147 @@ Example: "Create a meeting today in Chennai at 5pm if weather is good"
         weather_condition = "Moderate"
         weather_emoji = "🌤️"
     
-    # Step 3: Extract meeting title or use default
-    meeting_title = "Team Meeting"
-    if "review" in query_lower:
-        meeting_title = "Review Meeting"
-    elif "standup" in query_lower:
-        meeting_title = "Standup Meeting"
-    elif "planning" in query_lower:
-        meeting_title = "Planning Meeting"
-    elif "discussion" in query_lower:
-        meeting_title = "Discussion Meeting"
+    # Step 3: Extract meeting title intelligently
+    meeting_title = "Team Meeting"  # default
+    description = ""
+    
+    # Try to extract meeting name/title from query
+    import re
+    
+    # Pattern: "named X" or "called X" or "titled X"
+    name_patterns = [
+        r'named\s+(.+?)(?:\s+regarding|\s+about|\s+for|\s+at|\s+in|\s+on|$)',
+        r'called\s+(.+?)(?:\s+regarding|\s+about|\s+for|\s+at|\s+in|\s+on|$)',
+        r'titled\s+(.+?)(?:\s+regarding|\s+about|\s+for|\s+at|\s+in|\s+on|$)',
+    ]
+    
+    for pattern in name_patterns:
+        match = re.search(pattern, query_lower, re.IGNORECASE)
+        if match:
+            meeting_title = match.group(1).strip().title()
+            break
+    
+    # Pattern: "regarding X" or "about X"
+    desc_patterns = [
+        r'regarding\s+(.+?)(?:\s+at|\s+in|\s+on|$)',
+        r'about\s+(.+?)(?:\s+at|\s+in|\s+on|$)',
+    ]
+    
+    for pattern in desc_patterns:
+        match = re.search(pattern, query_lower, re.IGNORECASE)
+        if match:
+            description = match.group(1).strip()
+            break
+    
+    # Fallback: Common meeting types
+    if meeting_title == "Team Meeting":
+        if "review" in query_lower:
+            meeting_title = "Review Meeting"
+        elif "standup" in query_lower or "stand up" in query_lower:
+            meeting_title = "Standup Meeting"
+        elif "planning" in query_lower:
+            meeting_title = "Planning Meeting"
+        elif "discussion" in query_lower:
+            meeting_title = "Discussion Meeting"
+        elif "hr" in query_lower or "human resource" in query_lower:
+            meeting_title = "HR Meeting"
+        elif "interview" in query_lower:
+            meeting_title = "Interview"
+        elif "presentation" in query_lower:
+            meeting_title = "Presentation"
     
     # Step 4: Create meeting or suggest alternatives
     if is_good_weather:
-        # Create meeting
+        # Create meeting with extracted description
+        final_description = description if description else "Meeting scheduled based on favorable weather conditions."
+        
         create_result = create_meeting_tool(
             title=meeting_title,
             scheduled_date=f"{meeting_date_str} {time_str}",
             location=location,
-            description=f"Meeting scheduled based on favorable weather conditions.",
+            description=final_description,
             weather_condition=f"{weather_emoji} {weather_condition}"
         )
         
-        result = f"""
-{weather_result}
+        # Parse temperature from weather result
+        temp_match = re.search(r'Temperature:\s*([0-9.]+)°C', weather_result)
+        temperature = temp_match.group(1) if temp_match else "N/A"
+        
+        # Check if meeting was created or already exists
+        success_indicator = "✅" if "successfully scheduled" in create_result.lower() else "⚠️"
+        status_text = "Meeting Scheduled Successfully" if "successfully scheduled" in create_result.lower() else "Meeting Already Exists"
+        
+        result = f"""### {weather_emoji} Weather Conditions for {location}
 
----
-
-### {weather_emoji} Weather Analysis
-
-| Status | Condition |
-|--------|-----------|
-| ✅ Favorable | {weather_condition} |
-
----
-
-### 📅 Meeting Details
-
-| Field | Value |
-|-------|-------|
-| **Title** | {meeting_title} |
+| Parameter | Value |
+|-----------|-------|
 | **Date** | {meeting_date.strftime('%B %d, %Y')} ({date_query}) |
-| **Time** | {time_str} |
-| **Location** | {location} |
-| **Weather** | {weather_emoji} {weather_condition} |
+| **Temperature** | {temperature}°C |
+| **Condition** | {weather_condition} |
+| **Status** | {weather_emoji} Favorable for meeting |
+
+---
+
+### {success_indicator} {status_text}
+
+| Meeting Information | Details |
+|---------------------|---------|
+| **Title** | {meeting_title} |
+| **Date** | {meeting_date.strftime('%A, %B %d, %Y')} |
+| **Time** | {time_str} ({date_query}) |
+| **Location** | {location} |"""
+
+        if description:
+            result += f"""
+| **Description** | {description.capitalize()} |"""
+        
+        result += f"""
+
+---
+
+### 📊 Summary
 
 {create_result}
 
 ---
-💡 *You can also use the "+ Schedule" button to create meetings with more details.*
+
+💡 **Tip:** You can use the "+ Schedule Meeting" button in the sidebar for more scheduling options.
         """
     else:
-        result = f"""
-{weather_result}
+        # Parse temperature from weather result
+        temp_match = re.search(r'Temperature:\s*([0-9.]+)°C', weather_result)
+        temperature = temp_match.group(1) if temp_match else "N/A"
+        
+        result = f"""### {weather_emoji} Weather Conditions for {location}
 
-{weather_emoji} **Weather Analysis:** {weather_condition}
-❌ **Weather is not ideal for an in-person meeting.**
+| Parameter | Value |
+|-----------|-------|
+| **Date** | {meeting_date.strftime('%B %d, %Y')} ({date_query}) |
+| **Temperature** | {temperature}°C |
+| **Condition** | {weather_condition} |
+| **Status** | ❌ Not ideal for in-person meeting |
 
-**Recommendations:**
-1. 🏠 Consider a virtual meeting instead
-2. 📅 Reschedule to a day with better weather
-3. 🌤️ Check weather forecast for upcoming days
+---
 
-Would you like me to:
-- Create a virtual meeting for {date_query}?
-- Check weather for another day?
-- Suggest an alternative time?
+### ⚠️ Meeting Recommendation
+
+Due to unfavorable weather conditions ({weather_condition}), we recommend:
+
+| Option | Recommendation |
+|--------|---------------|
+| 🏠 **Virtual Meeting** | Schedule online meeting instead |
+| 📅 **Reschedule** | Choose a day with better weather |
+| 🌤️ **Check Forecast** | Review upcoming weather conditions |
+
+---
+
+### 💡 What would you like to do?
+
+- Create a **virtual meeting** for {date_query}?
+- Check **weather forecast** for another day?
+- Get **alternative time** suggestions?
+
+*Use the "+ Schedule Meeting" button to proceed with scheduling options.*
         """
     
     state["tool_result"] = result
