@@ -1,149 +1,226 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agentic AI Assistant</title>
+    <title>Agentic AI - by Puvinthar Stephen</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <script>
-        // Set backend URL for production/development
         window.API_BACKEND_URL = "{{ backend_url }}";
     </script>
+    
     <div class="app-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
+        <!-- Enhanced Sidebar -->
+        <aside class="sidebar">
             <div class="sidebar-header">
-                <button class="new-chat-btn" onclick="newChat()">
-                    <span class="icon">+</span>
-                    New chat
+                <div class="brand-container">
+                    <div class="logo-wrapper">
+                        <div class="logo">PS</div>
+                        <div class="brand-text">
+                            <span class="brand-name">Agentic AI</span>
+                            <span class="developer-name">by Puvinthar Stephen</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="button" class="new-chat-btn" onclick="newChat()" aria-label="Start new chat">
+                    <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>New Chat</span>
                 </button>
             </div>
             
             <div class="sidebar-content">
-                <div class="chat-history-title">Recent</div>
+                <div class="section-label">Recent Conversations</div>
                 <div id="chatHistory" class="chat-history">
-                    <!-- Chat history will be populated here -->
+                    <!-- Chat history items will be inserted here -->
                 </div>
             </div>
             
             <div class="sidebar-footer">
-                <div class="backend-status" id="backendStatus">
-                    <span class="status-dot"></span>
-                    <span class="status-text">Checking...</span>
+                <div class="status-container">
+                    <div class="backend-status" id="backendStatus">
+                        <span class="status-indicator"></span>
+                        <span class="status-text">Connecting...</span>
+                    </div>
+                </div>
+                <div class="developer-badge">
+                    <span class="badge-icon">⚡</span>
+                    <span class="badge-text">Powered by PS</span>
                 </div>
             </div>
-        </div>
+        </aside>
 
-        <!-- Main Chat Area -->
-        <div class="main-container">
-            <!-- Header -->
-            <div class="header">
-                <h1 class="header-title">Agentic AI</h1>
-                <div class="header-actions">
-                    <button class="icon-btn" onclick="toggleSettings()">⚙️</button>
+        <!-- Main Content Area -->
+        <main class="main-container">
+            <!-- Enhanced Header -->
+            <header class="app-header">
+                <div class="header-left">
+                    <h1 class="header-title">
+                        <span class="gradient-text">Agentic AI</span>
+                    </h1>
                 </div>
-            </div>
+                <div class="header-right">
+                    <button type="button" class="header-btn" onclick="toggleSettings()" aria-label="Settings" title="Settings">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M12 1v6m0 6v6m5.2-14.8l-4.2 4.2m0 5.2l-4.2 4.2M23 12h-6m-6 0H5m14.8-5.2l-4.2 4.2m0 5.2l-4.2 4.2"></path>
+                        </svg>
+                    </button>
+                </div>
+            </header>
 
-            <!-- Chat Display -->
+            <!-- Chat Display Area -->
             <div class="chat-display" id="chatDisplay">
-                <div class="welcome-section">
+                <!-- Welcome Screen -->
+                <div class="welcome-screen">
                     <div class="welcome-content">
-                        <h2 class="welcome-title">Welcome to Agentic AI Assistant</h2>
-                        <p class="welcome-subtitle">Intelligent AI with RAG, Weather, Meetings & Database Queries</p>
+                        <div class="welcome-logo">
+                            <div class="logo-circle">PS</div>
+                        </div>
+                        <h2 class="welcome-heading">What can I help with?</h2>
+                        <p class="welcome-subtext">Powered by advanced AI agents for intelligent document analysis, real-time weather, meeting scheduling, and more</p>
                         
-                        <div class="quick-actions">
-                            <button class="action-btn" onclick="quickAction('What\'s the weather today?')">
-                                <span class="action-icon">🌤️</span>
-                                <span class="action-text">Weather</span>
+                        <!-- Capability Cards -->
+                        <div class="capability-grid">
+                            <button type="button" class="capability-card" onclick="quickAction('What\'s the weather in Tokyo today?')" aria-label="Get weather insights">
+                                <div class="card-icon weather-icon">🌤️</div>
+                                <div class="card-content">
+                                    <div class="card-title">Weather Insights</div>
+                                    <div class="card-desc">Real-time weather data</div>
+                                </div>
                             </button>
-                            <button class="action-btn" onclick="quickAction('Show my meetings today')">
-                                <span class="action-icon">📅</span>
-                                <span class="action-text">Meetings</span>
+                            
+                            <button type="button" class="capability-card" onclick="quickAction('Show my meetings today')" aria-label="View meetings">
+                                <div class="card-icon meeting-icon">📅</div>
+                                <div class="card-content">
+                                    <div class="card-title">Smart Scheduling</div>
+                                    <div class="card-desc">Manage your meetings</div>
+                                </div>
                             </button>
-                            <button class="action-btn" onclick="toggleMeetingForm()">
-                                <span class="action-icon">➕</span>
-                                <span class="action-text">Schedule</span>
+                            
+                            <button type="button" class="capability-card" onclick="document.getElementById('fileInput').click()" aria-label="Upload document">
+                                <div class="card-icon doc-icon">📄</div>
+                                <div class="card-content">
+                                    <div class="card-title">Document Analysis</div>
+                                    <div class="card-desc">RAG-powered insights</div>
+                                </div>
                             </button>
-                            <button class="action-btn" onclick="document.getElementById('fileInput').click()">
-                                <span class="action-icon">📄</span>
-                                <span class="action-text">Upload</span>
+                            
+                            <button type="button" class="capability-card" onclick="toggleMeetingForm()" aria-label="Create meeting">
+                                <div class="card-icon create-icon">✨</div>
+                                <div class="card-content">
+                                    <div class="card-title">Create Meeting</div>
+                                    <div class="card-desc">Schedule with weather check</div>
+                                </div>
                             </button>
                         </div>
                     </div>
                 </div>
                 
+                <!-- Messages Container -->
                 <div id="messageContainer" class="message-container">
-                    <!-- Messages will be displayed here -->
+                    <!-- Messages will be rendered here -->
                 </div>
             </div>
 
-            <!-- Input Area -->
+            <!-- Enhanced Input Area -->
             <div class="input-area">
-                <div class="input-section">
-                    <label for="fileInput" class="sr-only">Upload document</label>
+                <div class="input-wrapper-enhanced">
                     <input 
                         type="file" 
                         id="fileInput" 
                         accept=".pdf,.txt,.doc,.docx" 
                         onchange="handleFileUpload(event)"
-                        aria-label="Upload document for RAG"
+                        class="file-input-hidden"
+                        aria-label="Upload document file"
+                        title="Upload document (PDF, TXT, DOC, DOCX)"
                     >
                     
-                    <div class="input-wrapper">
-                        <button class="attach-btn" onclick="document.getElementById('fileInput').click()" aria-label="Attach document">
-                            <span aria-hidden="true">📎</span>
+                    <div class="input-container">
+                        <button type="button" class="input-action-btn" onclick="document.getElementById('fileInput').click()" aria-label="Attach file" title="Attach file">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"></path>
+                            </svg>
                         </button>
                         
                         <input 
                             type="text" 
                             id="messageInput" 
-                            placeholder="Ask me anything..." 
-                            class="message-input"
+                            placeholder="Ask anything..." 
+                            class="message-input-enhanced"
                             onkeypress="handleKeyPress(event)"
-                            aria-label="Chat message input"
                         >
                         
-                        <button class="send-btn" onclick="sendMessage()" aria-label="Send message">
-                            <span aria-hidden="true">➤</span>
+                        <button type="button" class="send-btn-enhanced" onclick="sendMessage()" aria-label="Send message" title="Send message">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                            </svg>
                         </button>
                     </div>
                     
-                    <div id="fileStatus" class="file-status"></div>
+                    <div id="fileStatus" class="file-status-enhanced"></div>
+                </div>
+                
+                <div class="input-footer">
+                    <span class="footer-text">Agentic AI can make mistakes. Verify important information.</span>
                 </div>
             </div>
-        </div>
+        </main>
     </div>
 
-    <!-- Meeting Modal -->
-    <div id="meetingModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Schedule Meeting</h2>
-                <button class="close-btn" onclick="toggleMeetingForm()">×</button>
+    <!-- Meeting Modal (Enhanced) -->
+    <div id="meetingModal" class="modal-overlay">
+        <div class="modal-content-enhanced">
+            <div class="modal-header-enhanced">
+                <h2 class="modal-title">Schedule New Meeting</h2>
+                <button type="button" class="modal-close-btn" onclick="toggleMeetingForm()" aria-label="Close modal" title="Close">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
             </div>
             
-            <div class="modal-body">
-                <label for="meetingTitle" class="sr-only">Meeting title</label>
-                <input type="text" id="meetingTitle" placeholder="Meeting title" title="Enter meeting title" aria-label="Meeting title" class="modal-input">
+            <div class="modal-body-enhanced">
+                <div class="form-group">
+                    <label for="meetingTitle">Meeting Title</label>
+                    <input type="text" id="meetingTitle" placeholder="Enter meeting title" class="form-input">
+                </div>
                 
-                <label for="meetingDate" class="sr-only">Meeting date</label>
-                <input type="date" id="meetingDate" title="Select meeting date" aria-label="Meeting date" class="modal-input">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="meetingDate">Date</label>
+                        <input type="date" id="meetingDate" class="form-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="meetingTime">Time</label>
+                        <input type="time" id="meetingTime" class="form-input">
+                    </div>
+                </div>
                 
-                <label for="meetingTime" class="sr-only">Meeting time</label>
-                <input type="time" id="meetingTime" title="Select meeting time" aria-label="Meeting time" class="modal-input">
+                <div class="form-group">
+                    <label for="meetingLocation">Location</label>
+                    <input type="text" id="meetingLocation" placeholder="Enter location" class="form-input">
+                </div>
                 
-                <label for="meetingLocation" class="sr-only">Meeting location</label>
-                <input type="text" id="meetingLocation" placeholder="Location" aria-label="Meeting location" class="modal-input">
-                
-                <label for="meetingNotes" class="sr-only">Meeting notes</label>
-                <textarea id="meetingNotes" placeholder="Notes (optional)" aria-label="Meeting notes" class="modal-input" rows="3"></textarea>
+                <div class="form-group">
+                    <label for="meetingNotes">Notes (optional)</label>
+                    <textarea id="meetingNotes" placeholder="Add meeting notes..." class="form-textarea" rows="3"></textarea>
+                </div>
             </div>
             
-            <div class="modal-footer">
-                <button class="btn-cancel" onclick="toggleMeetingForm()">Cancel</button>
-                <button class="btn-create" onclick="createMeeting()">Create Meeting</button>
+            <div class="modal-footer-enhanced">
+                <button type="button" class="btn-secondary" onclick="toggleMeetingForm()">Cancel</button>
+                <button type="button" class="btn-primary" onclick="createMeeting()">Create Meeting</button>
             </div>
         </div>
     </div>

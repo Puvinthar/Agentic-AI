@@ -215,13 +215,14 @@ def load_document_tool(file_path: str) -> str:
 
 def query_document_tool(question: str) -> str:
     """
-    Query the loaded document using RAG with improved relevance checking
+    Query the loaded document with intelligent section extraction
+    Understands questions about specific sections (skills, experience, education, etc.)
     
     Args:
         question: User's question about the document
     
     Returns:
-        Answer from document or indication that answer not found
+        Precise answer from document with section-aware extraction
     """
     global vector_store, document_content
     
@@ -233,45 +234,81 @@ def query_document_tool(question: str) -> str:
     
     try:
         # Normalize question
-        question = question.strip()
+        question = question.strip().lower()
         if not question:
             return "❌ Please provide a valid question."
         
-        # Search for relevant chunks with higher k for better context
-        relevant_docs = vector_store.similarity_search(question, k=5)
+        # Section-aware query mapping for resumes/documents
+        section_keywords = {
+            "skills": ["skill", "technical", "technologies", "tools", "programming", "languages", "expertise", "competencies"],
+            "experience": ["experience", "work", "employment", "job", "position", "role", "career", "worked"],
+            "education": ["education", "degree", "university", "college", "school", "qualification", "academic", "studied"],
+            "summary": ["summary", "about", "profile", "objective", "introduction", "who", "background", "owner"],
+            "projects": ["project", "portfolio", "built", "developed", "created"],
+            "contact": ["contact", "email", "phone", "address", "location", "linkedin", "github"],
+            "certifications": ["certification", "certificate", "certified", "credential"],
+        }
         
-        if not relevant_docs:
-            return "⚠️ No relevant information found in the document for your query. Try a different question or upload a more relevant document."
+        # Detect section intent
+        detected_section = None
+        for section, keywords in section_keywords.items():
+            if any(keyword in question for keyword in keywords):
+                detected_section = section
+                break
         
-        # Combine relevant chunks with proper formatting
+        # If specific section detected, try to extract it directly from full document
+        if detected_section:
+            section_patterns = {
+                "skills": [r"(?i)(skills?|technical\s+skills?|technologies|competencies)(.*?)(?=\n\n|\nexperience|\neducation|$)",
+                          r"(?i)(programming\s+languages?|tools?|expertise)(.*?)(?=\n\n|\nexperience|\neducation|$)"],
+                "experience": [r"(?i)(experience|employment|work\s+history)(.*?)(?=\n\n|education|skills?|$)"],
+                "education": [r"(?i)(education|academic|qualifications?)(.*?)(?=\n\n|experience|skills?|$)"],
+                "summary": [r"(?i)(summary|profile|objective|about)(.*?)(?=\n\n|experience|education|skills?|$)"],
+                "projects": [r"(?i)(projects?|portfolio)(.*?)(?=\n\n|experience|education|$)"],
+            }
+            
+            import re
+            if detected_section in section_patterns:
+                for pattern in section_patterns[detected_section]:
+                    match = re.search(pattern, document_content, re.DOTALL | re.IGNORECASE)
+                    if match:
+                        section_content = match.group(0).strip()
+                        if len(section_content) > 50:  # Valid section found
+                            # Clean and limit content
+                            section_content = section_content[:1200]
+                            return f"📄 **{detected_section.title()} Section:**\n\n{section_content}"
+        
+        # Fallback to semantic search with improved parameters
+        relevant_docs_with_scores = vector_store.similarity_search_with_score(question, k=3)
+        
+        if not relevant_docs_with_scores:
+            return "⚠️ No relevant information found in the document for your query."
+        
+        # More lenient relevance threshold for better recall
+        RELEVANCE_THRESHOLD = 1.5  # Increased from 1.2
+        filtered_docs = [(doc, score) for doc, score in relevant_docs_with_scores if score < RELEVANCE_THRESHOLD]
+        
+        if not filtered_docs:
+            # If nothing passes threshold, use top result anyway
+            filtered_docs = [relevant_docs_with_scores[0]]
+        
+        # Take top 2 most relevant chunks
+        top_docs = [doc for doc, score in sorted(filtered_docs, key=lambda x: x[1])[:2]]
+        
+        # Extract context
         context_parts = []
-        for doc in relevant_docs:
-            if doc.page_content.strip():
-                context_parts.append(doc.page_content.strip())
+        for doc in top_docs:
+            content = doc.page_content.strip()
+            if content:
+                context_parts.append(content[:700])
         
         if not context_parts:
-            return "⚠️ Document loaded but no content found for your query."
+            return "⚠️ Document loaded but no relevant content found."
         
         context = "\n\n".join(context_parts)
         
-        # Improved relevance check using semantic similarity and keyword matching
-        question_lower = question.lower()
-        context_lower = context.lower()
-        
-        # Check for meaningful keyword overlap
-        question_words = [w for w in question_lower.split() if len(w) > 3]  # Filter short words
-        context_words = set(context_lower.split())
-        
-        matches = sum(1 for word in question_words if word in context_words)
-        relevance_score = matches / len(question_words) if question_words else 0
-        
-        # If relevance is too low, indicate it's not in the document
-        if relevance_score < 0.2 and len(question_words) > 2:
-            return f"⚠️ No direct match found. The document may not contain information about '{question}'. Try rephrasing your question."
-        
-        # Return relevant context with better formatting
-        truncated_context = context[:1500]
-        return f"📄 **From Document:**\n\n{truncated_context}{'...' if len(context) > 1500 else ''}"
+        # Return relevant information
+        return f"📄 **Document Answer:**\n\n{context}"
         
     except Exception as e:
         logger.error(f"Document query error: {e}", exc_info=True)
@@ -284,32 +321,61 @@ def query_document_tool(question: str) -> str:
 
 def web_search_tool(query: str) -> str:
     """
-    Search the web using DuckDuckGo
+    Search the web using DuckDuckGo with improved error handling and user feedback
     
     Args:
         query: Search query
     
     Returns:
-        Formatted search results
+        Formatted search results or appropriate error message
     """
     try:
-        ddgs = DDGS()
-        results = list(ddgs.text(query, max_results=3))
+        from duckduckgo_search import DDGS
+        import time
         
-        if not results:
-            return "❌ No search results found."
+        # Add retry logic for rate limiting
+        max_retries = 2
+        retry_messages = []
         
-        formatted_results = "🔍 Web Search Results:\n\n"
-        for i, result in enumerate(results, 1):
-            formatted_results += f"{i}. {result['title']}\n"
-            formatted_results += f"   {result['body'][:200]}...\n"
-            formatted_results += f"   🔗 {result['href']}\n\n"
+        for attempt in range(max_retries):
+            try:
+                ddgs = DDGS(timeout=20)
+                results = list(ddgs.text(query, max_results=3))
+                
+                if not results:
+                    return "⚠️ No search results found for your query. Try rephrasing or ask something else."
+                
+                # If we had to retry, inform the user
+                retry_info = ""
+                if retry_messages:
+                    retry_info = f"ℹ️ *{' '.join(retry_messages)}*\n\n"
+                
+                formatted_results = f"{retry_info}🔍 **Web Search Results:**\n\n"
+                for i, result in enumerate(results, 1):
+                    formatted_results += f"**{i}. {result['title']}**\n"
+                    formatted_results += f"{result['body'][:200]}...\n"
+                    formatted_results += f"🔗 {result['href']}\n\n"
+                
+                return formatted_results
+                
+            except Exception as retry_error:
+                if "Ratelimit" in str(retry_error) and attempt < max_retries - 1:
+                    retry_msg = f"Search service busy, retrying (attempt {attempt + 2}/{max_retries})..."
+                    retry_messages.append(retry_msg)
+                    logger.warning(f"Rate limited, retrying... (attempt {attempt + 1})")
+                    time.sleep(2)
+                    continue
+                else:
+                    raise retry_error
         
-        return formatted_results
+        return "⚠️ Web search temporarily unavailable due to high traffic. Please try again in a moment."
         
     except Exception as e:
         logger.error(f"Web search error: {e}")
-        return f"❌ Error performing web search: {str(e)}"
+        # Don't expose technical errors to user
+        if "Ratelimit" in str(e):
+            return "⚠️ **Search Rate Limit Reached**\n\nThe search service has temporarily limited requests. This usually resolves in 1-2 minutes.\n\n💡 **Meanwhile, you can:**\n- Ask about your uploaded document\n- Check weather information\n- Query or schedule meetings"
+        return "⚠️ Unable to perform web search at this time. I can still help with document queries, weather, and meetings."
 
 
 # ============================================================================

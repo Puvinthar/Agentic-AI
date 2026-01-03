@@ -37,6 +37,10 @@ SYNC_DATABASE_URL = os.getenv(
     f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 )
 
+# Remove SSL query parameters from asyncpg URL (asyncpg doesn't support them in URL)
+if DATABASE_URL and "?" in DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.split("?")[0]
+
 # Async Engine (for FastAPI async endpoints)
 async_engine = create_async_engine(
     DATABASE_URL,
@@ -44,15 +48,20 @@ async_engine = create_async_engine(
     pool_pre_ping=True,
     pool_size=10,
     max_overflow=20,
+    connect_args={"ssl": "require"} if "neon.tech" in DATABASE_URL or "aws" in DATABASE_URL else {}
 )
 
 # Sync Engine (for tools that don't support async)
+# Remove query params from SYNC_DATABASE_URL for psycopg2 compatibility
+SYNC_URL_CLEAN = SYNC_DATABASE_URL.split("?")[0] if SYNC_DATABASE_URL and "?" in SYNC_DATABASE_URL else SYNC_DATABASE_URL
+
 sync_engine = create_engine(
-    SYNC_DATABASE_URL,
+    SYNC_URL_CLEAN,
     echo=False,
     pool_pre_ping=True,
     pool_size=5,
     max_overflow=10,
+    connect_args={"sslmode": "require"} if "neon.tech" in SYNC_URL_CLEAN or "aws" in SYNC_URL_CLEAN else {}
 )
 
 # Session factories

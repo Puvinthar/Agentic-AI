@@ -176,28 +176,33 @@ def weather_agent(state: AgentState) -> AgentState:
 
 def document_agent(state: AgentState) -> AgentState:
     """
-    Agent 2: Document Understanding + Web Intelligence Agent
-    Handles document queries with fallback to web search
+    Agent 2: Document Understanding + Intelligent Section Extraction
+    Handles document queries with smart section detection (skills, experience, etc.)
     """
     user_query = state["user_query"]
     
-    # First, try to answer from document
+    # Query document with improved section-aware RAG
     doc_result = query_document_tool(user_query)
     
-    # Check if document doesn't have the answer (using improved error detection)
-    if any(phrase in doc_result for phrase in ["No document loaded", "No direct match found", "may not contain"]):
-        # Fallback to web search
-        logger.info("📄 Answer not in document, searching web...")
+    # Only fall back to web search if explicitly about general knowledge, not document content
+    query_lower = user_query.lower()
+    is_document_specific = any(word in query_lower for word in ["skills", "experience", "education", "resume", "cv", "about", "summary", "projects", "work"])
+    
+    # Check if document doesn't have relevant answer AND it's not a document-specific query
+    if not is_document_specific and any(phrase in doc_result for phrase in ["No document loaded", "does not contain relevant", "No relevant information"]):
+        # Fallback to web search for general queries
+        logger.info("📄 General query, using web search...")
         search_result = web_search_tool(user_query)
         
-        if search_result and "❌" not in search_result:
-            state["tool_result"] = f"📄 Not found in document. Searching the web instead:\n\n{search_result}"
+        if search_result and "❌" not in search_result and "⚠️" not in search_result:
+            state["tool_result"] = f"📄 **Document Status:** No document loaded.\n\n{search_result}"
         else:
-            state["tool_result"] = doc_result  # Return document result if search also fails
+            state["tool_result"] = doc_result
     else:
+        # Document has relevant answer or it's document-specific query - use it directly
         state["tool_result"] = doc_result
     
-    logger.info("📄 Document query executed")
+    logger.info("📄 Document query completed")
     return state
 
 
@@ -347,16 +352,27 @@ def response_generator(state: AgentState) -> AgentState:
     if llm:
         try:
             # Use LLM to generate natural response
-            system_message = """You are a helpful AI assistant. Generate a natural, conversational response 
-            based on the tool results provided. Be concise, friendly, and informative. 
-            Do not make up information that isn't in the tool results."""
+            system_message = """You are a professional AI assistant with expertise across multiple domains. 
+Provide clear, accurate, and well-structured responses based strictly on the provided tool results.
+
+Guidelines:
+- Be professional yet approachable in tone
+- Answer ONLY what was asked - avoid unnecessary elaboration
+- For document queries: Extract and present the most relevant information concisely
+- For weather queries: Format data clearly with key metrics highlighted
+- For meetings: Present information in organized format
+- Use bullet points or numbered lists when appropriate
+- Never fabricate information not present in tool results
+- If information is incomplete, acknowledge it professionally"""
             
             prompt = f"""User Query: {user_query}
 
 Tool Results:
 {tool_result}
 
-Generate a helpful and natural response based on the above information. If the tool result already contains a complete answer, you may use it as-is or slightly refine it."""
+Task: Generate a professional, focused response that directly answers the user's question. 
+If the tool result contains a complete answer, you may use it with minor refinements for clarity and professionalism.
+Ensure the response is concise and relevant to the specific question asked."""
             
             messages = [
                 SystemMessage(content=system_message),

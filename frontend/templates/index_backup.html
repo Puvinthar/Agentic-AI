@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic AI Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <script>
+        // Set backend URL for production/development
+        window.API_BACKEND_URL = "{{ backend_url }}";
+    </script>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <button class="new-chat-btn" onclick="newChat()">
+                    <span class="icon">+</span>
+                    New chat
+                </button>
+            </div>
+            
+            <div class="sidebar-content">
+                <div class="chat-history-title">Recent</div>
+                <div id="chatHistory" class="chat-history">
+                    <!-- Chat history will be populated here -->
+                </div>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="backend-status" id="backendStatus">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Checking...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="main-container">
+            <!-- Header -->
+            <div class="header">
+                <h1 class="header-title">Agentic AI</h1>
+                <div class="header-actions">
+                    <button class="icon-btn" onclick="toggleSettings()">⚙️</button>
+                </div>
+            </div>
+
+            <!-- Chat Display -->
+            <div class="chat-display" id="chatDisplay">
+                <div class="welcome-section">
+                    <div class="welcome-content">
+                        <h2 class="welcome-title">Welcome to Agentic AI Assistant</h2>
+                        <p class="welcome-subtitle">Intelligent AI with RAG, Weather, Meetings & Database Queries</p>
+                        
+                        <div class="quick-actions">
+                            <button class="action-btn" onclick="quickAction('What\'s the weather today?')">
+                                <span class="action-icon">🌤️</span>
+                                <span class="action-text">Weather</span>
+                            </button>
+                            <button class="action-btn" onclick="quickAction('Show my meetings today')">
+                                <span class="action-icon">📅</span>
+                                <span class="action-text">Meetings</span>
+                            </button>
+                            <button class="action-btn" onclick="toggleMeetingForm()">
+                                <span class="action-icon">➕</span>
+                                <span class="action-text">Schedule</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="messageContainer" class="message-container">
+                    <!-- Messages will be displayed here -->
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-area">
+                <div class="input-section">
+                    <label for="fileInput" class="sr-only">Upload document</label>
+                    <input 
+                        type="file" 
+                        id="fileInput" 
+                        accept=".pdf,.txt,.doc,.docx" 
+                        onchange="handleFileUpload(event)"
+                        aria-label="Upload document for RAG"
+                    >
+                    
+                    <div class="input-wrapper">
+                        <button class="attach-btn" onclick="document.getElementById('fileInput').click()" aria-label="Attach document">
+                            <span aria-hidden="true">📎</span>
+                        </button>
+                        
+                        <input 
+                            type="text" 
+                            id="messageInput" 
+                            placeholder="Ask me anything..." 
+                            class="message-input"
+                            onkeypress="handleKeyPress(event)"
+                            aria-label="Chat message input"
+                        >
+                        
+                        <button class="send-btn" onclick="sendMessage()" aria-label="Send message">
+                            <span aria-hidden="true">➤</span>
+                        </button>
+                    </div>
+                    
+                    <div id="fileStatus" class="file-status"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Meeting Modal -->
+    <div id="meetingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Schedule Meeting</h2>
+                <button class="close-btn" onclick="toggleMeetingForm()">×</button>
+            </div>
+            
+            <div class="modal-body">
+                <label for="meetingTitle" class="sr-only">Meeting title</label>
+                <input type="text" id="meetingTitle" placeholder="Meeting title" title="Enter meeting title" aria-label="Meeting title" class="modal-input">
+                
+                <label for="meetingDate" class="sr-only">Meeting date</label>
+                <input type="date" id="meetingDate" title="Select meeting date" aria-label="Meeting date" class="modal-input">
+                
+                <label for="meetingTime" class="sr-only">Meeting time</label>
+                <input type="time" id="meetingTime" title="Select meeting time" aria-label="Meeting time" class="modal-input">
+                
+                <label for="meetingLocation" class="sr-only">Meeting location</label>
+                <input type="text" id="meetingLocation" placeholder="Location" aria-label="Meeting location" class="modal-input">
+                
+                <label for="meetingNotes" class="sr-only">Meeting notes</label>
+                <textarea id="meetingNotes" placeholder="Notes (optional)" aria-label="Meeting notes" class="modal-input" rows="3"></textarea>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="toggleMeetingForm()">Cancel</button>
+                <button class="btn-create" onclick="createMeeting()">Create Meeting</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.8/dist/axios.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

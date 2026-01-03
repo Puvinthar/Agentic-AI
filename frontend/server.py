@@ -211,18 +211,27 @@ if __name__ == '__main__':
     print("="*60)
     print(f"Backend URL: {BACKEND_URL}")
     
+    # Get port from environment (HF Spaces uses 7860)
+    PORT = int(os.getenv("PORT", 7860))
+    
     if ENVIRONMENT == "development":
-        print("Accessing at: http://localhost:5000")
+        print(f"Accessing at: http://localhost:{PORT}")
         print("WARNING: This is a development server")
         print("="*60 + "\n")
         
         app.run(
             host='0.0.0.0',
-            port=5000,
+            port=PORT,
             debug=True,
             use_reloader=False
         )
     else:
-        print("Production mode - Use Gunicorn to run this app")
-        print("Command: gunicorn -w 4 -b 0.0.0.0:5000 server:app")
+        print(f"Production mode - Running on port {PORT}")
+        print(f"Command: gunicorn -w 4 -b 0.0.0.0:{PORT} server:app")
         print("="*60 + "\n")
+        
+        app.run(
+            host='0.0.0.0',
+            port=PORT,
+            debug=False
+        )
