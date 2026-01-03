@@ -251,24 +251,27 @@ def query_document_tool(question: str) -> str:
                     llm = ChatGroq(
                         groq_api_key=groq_api_key,
                         model_name="llama-3.1-70b-versatile",
-                        temperature=0.2,
+                        temperature=0.1,
                     )
                     
-                    prompt = f"""You are an expert document analyst. Answer the user's question based ONLY on the document content below.
+                    prompt = f"""You are an expert document analyst. Answer the user's question based on the document content.
 
 **DOCUMENT CONTENT:**
 {document_content}
 
 **USER QUESTION:** {question}
 
-**INSTRUCTIONS:**
-- Provide a direct, accurate answer based on the document
-- If the question asks about skills/experience/education, list ALL relevant details
-- Be specific and quote exact information from the document
-- If the answer is not in the document, say "This information is not available in the document"
-- Format your response clearly with bullet points if listing multiple items
+**CRITICAL INSTRUCTIONS:**
+- Answer ONLY what the user asked - be specific and concise
+- If asked "about someone", provide: Name, Role/Title, Location, 2-3 key highlights
+- If asked about skills, list ONLY skills (don't include education/experience)
+- If asked about experience, mention ONLY work experience (not education)
+- If asked for summary, give a 3-4 sentence professional summary
+- DO NOT dump the entire document - extract and summarize intelligently
+- Use bullet points for lists, but keep them brief
+- Maximum 150 words unless user asks for "detailed" or "complete" information
 
-**ANSWER:**"""
+**YOUR CONCISE ANSWER:**"""
                     
                     response = llm.invoke(prompt)
                     answer = response.content.strip()
@@ -278,7 +281,7 @@ def query_document_tool(question: str) -> str:
 {answer}
 
 ---
-💡 *Full document analyzed. Ask follow-up questions anytime!*"""
+💡 *Ask specific questions like "What are his skills?" or "Tell me about his experience"*"""
                 except Exception as e:
                     logger.warning(f"LLM processing failed: {e}, falling back to semantic search")
         
@@ -325,22 +328,24 @@ def query_document_tool(question: str) -> str:
                     temperature=0.2,
                 )
                 
-                prompt = f"""You are an expert document analyst. Answer the user's question based ONLY on the context provided.
+                prompt = f"""You are an expert document analyst. Answer the user's question based on the provided context.
 
 **RELEVANT CONTEXT FROM DOCUMENT:**
 {combined_context}
 
 **USER QUESTION:** {question}
 
-**INSTRUCTIONS:**
-- Answer directly and accurately based on the context
-- If asking about skills, list ALL skills mentioned
-- If asking about experience, provide complete details
-- Be comprehensive - don't miss important information
-- If the context doesn't fully answer the question, say so
-- Use bullet points for lists
+**CRITICAL INSTRUCTIONS:**
+- Answer ONLY what the user asked - be specific and targeted
+- Extract the most relevant information from the context
+- If asked "about someone", give: Name, Role, Location, 2-3 key points
+- If asked about skills, list ONLY skills (no experience/education)
+- If asked about experience, mention ONLY work history
+- DO NOT repeat the entire context - summarize intelligently
+- Keep answer under 100 words unless specifically asked for details
+- Use bullet points for clarity but keep them concise
 
-**ANSWER:**"""
+**YOUR FOCUSED ANSWER:**"""
                 
                 response = llm.invoke(prompt)
                 answer = response.content.strip()
@@ -350,7 +355,7 @@ def query_document_tool(question: str) -> str:
 {answer}
 
 ---
-💡 *Need more details? Ask a follow-up question!*"""
+💡 *Ask specific questions for more details!*"""
             except Exception as e:
                 logger.warning(f"LLM generation failed: {e}, returning raw context")
         
