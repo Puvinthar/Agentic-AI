@@ -44,6 +44,7 @@ const mapAxiosError = (error, fallbackMessage) => {
 document.addEventListener('DOMContentLoaded', function() {
     checkBackendStatus();
     setupEventListeners();
+    loadThemePreference();
     setInterval(checkBackendStatus, 30000); // Check every 30 seconds
 });
 
@@ -63,25 +64,37 @@ function setupEventListeners() {
 // ============================================================================
 
 async function checkBackendStatus() {
+    const statusElement = document.getElementById('backendStatus');
+    const statusDot = statusElement.querySelector('.status-indicator');
+    const statusText = statusElement.querySelector('.status-text');
+    
     try {
-        const response = await api.get('/health', { timeout: 5000 });
-        const statusElement = document.getElementById('backendStatus');
-        const statusDot = statusElement.querySelector('.status-dot');
-        const statusText = statusElement.querySelector('.status-text');
+        const response = await api.get('/health', { timeout: 10000 });
         
         if (response.status === 200) {
-            statusDot.classList.add('online');
+            statusElement.classList.add('online');
+            statusElement.classList.remove('offline');
             statusText.textContent = 'Backend online';
         } else {
-            statusDot.classList.remove('online');
+            statusElement.classList.remove('online');
+            statusElement.classList.add('offline');
             statusText.textContent = 'Backend error';
         }
     } catch (error) {
-        const statusElement = document.getElementById('backendStatus');
-        const statusDot = statusElement.querySelector('.status-dot');
-        const statusText = statusElement.querySelector('.status-text');
-        statusDot.classList.remove('online');
-        statusText.textContent = 'Backend offline';
+        statusElement.classList.remove('online');
+        statusElement.classList.add('offline');
+        
+        // Better error messages
+        if (error.code === 'ECONNABORTED') {
+            statusText.textContent = 'Backend starting...';
+        } else if (error.response?.status === 503) {
+            statusText.textContent = 'Backend warming up...';
+        } else {
+            statusText.textContent = 'Backend offline';
+        }
+        
+        // Retry faster during startup
+        setTimeout(checkBackendStatus, 3000);
     }
 }
 
@@ -104,11 +117,11 @@ async function sendMessage() {
     
     // Disable input during sending
     messageInput.disabled = true;
-    const sendBtn = document.querySelector('.send-btn');
-    sendBtn.disabled = true;
+    const sendBtn = document.querySelector('.send-btn-enhanced');
+    if (sendBtn) sendBtn.disabled = true;
     
     // Hide welcome section if visible
-    const welcomeSection = document.querySelector('.welcome-section');
+    const welcomeSection = document.querySelector('.welcome-screen');
     if (welcomeSection) welcomeSection.style.display = 'none';
     
     // Add user message to display
@@ -146,7 +159,7 @@ async function sendMessage() {
         console.error('Error sending message:', error);
     } finally {
         messageInput.disabled = false;
-        sendBtn.disabled = false;
+        if (sendBtn) sendBtn.disabled = false;
         messageInput.focus();
     }
 }
@@ -384,6 +397,30 @@ function loadChat(message) {
     document.getElementById('messageInput').focus();
 }
 
+// ============================================================================
+// THEME TOGGLE
+// ============================================================================
+
+function loadThemePreference() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+}
+
 function toggleSettings() {
-    alert('Settings panel coming soon!');
+    const html = document.documentElement;
+    const currentTheme = html.getAttribute('data-theme') || 'dark';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    html.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    
+    // Optional: Show a brief notification
+    const notification = document.createElement('div');
+    notification.className = 'theme-notification';
+    notification.textContent = `${newTheme === 'dark' ? '🌙' : '☀️'} ${newTheme.charAt(0).toUpperCase() + newTheme.slice(1)} theme`;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 2000);
 }

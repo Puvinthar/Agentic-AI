@@ -52,6 +52,27 @@
     --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Light Theme */
+[data-theme="light"] {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-tertiary: #f1f3f5;
+    --bg-hover: #e9ecef;
+    --bg-card: #ffffff;
+    
+    --text-primary: #1a1a1a;
+    --text-secondary: #6c757d;
+    --text-tertiary: #9ca3af;
+    
+    --border-color: #e5e7eb;
+    --border-hover: #d1d5db;
+    
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
 html, body {
     height: 100%;
     width: 100%;
@@ -256,16 +277,45 @@ body {
     align-items: center;
     justify-content: center;
     gap: 6px;
-    padding: 8px;
-    background: var(--gradient-primary);
+    padding: 10px 12px;
+    background: var(--bg-tertiary);
     border-radius: 8px;
     font-size: 11px;
-    font-weight: 600;
-    color: white;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
 }
 
-.badge-icon {
+.badge-text {
+    letter-spacing: 0.3px;
+}
+
+/* Theme Toggle Notification */
+.theme-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    padding: 12px 20px;
+    border-radius: 10px;
+    box-shadow: var(--shadow-lg);
     font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    z-index: 10000;
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
 }
 
 @keyframes pulse {

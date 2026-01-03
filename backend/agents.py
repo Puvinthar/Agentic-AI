@@ -208,8 +208,8 @@ def document_agent(state: AgentState) -> AgentState:
 
 def meeting_scheduler_agent(state: AgentState) -> AgentState:
     """
-    Agent 3: Meeting Scheduling + Weather Reasoning Agent
-    Handles meeting creation with weather-based logic
+    Agent 3: Interactive Meeting Scheduling with Weather Check
+    Checks weather first, then prompts user for meeting details
     """
     user_query = state["user_query"]
     query_lower = user_query.lower()
@@ -232,43 +232,70 @@ def meeting_scheduler_agent(state: AgentState) -> AgentState:
     
     # If no location specified, ask user
     if not location:
-        result = "⚠️ Please specify a city for the meeting. For example: 'Schedule a meeting in Chennai if weather is good'"
+        result = """📅 **Schedule a Meeting**
+
+To schedule a meeting with weather check, please specify:
+- City/Location
+- Date (today/tomorrow) 
+- Time (optional)
+
+Example: "Create a meeting today in Chennai at 5pm if weather is good"
+"""
         state["tool_result"] = result
         return state
     
-    # Determine date - default to tomorrow
-    date_query = "tomorrow"
-    meeting_date = datetime.now() + timedelta(days=1)
+    # Determine date
+    date_query = "today"
+    meeting_date = datetime.now()
     meeting_date_str = meeting_date.strftime("%Y-%m-%d")
+    time_str = "17:00"  # Default 5 PM
     
-    if "today" in query_lower:
-        date_query = "today"
-        meeting_date = datetime.now()
-        meeting_date_str = meeting_date.strftime("%Y-%m-%d")
-    elif "tomorrow" in query_lower:
+    if "tomorrow" in query_lower:
         date_query = "tomorrow"
+        meeting_date = datetime.now() + timedelta(days=1)
+        meeting_date_str = meeting_date.strftime("%Y-%m-%d")
+    
+    # Extract time if specified
+    import re
+    time_patterns = [
+        (r'(\d+)\s*pm', lambda m: f"{int(m.group(1)) + 12 if int(m.group(1)) < 12 else int(m.group(1))}:00"),
+        (r'(\d+)\s*am', lambda m: f"{int(m.group(1)):02d}:00"),
+        (r'(\d+):(\d+)\s*pm', lambda m: f"{int(m.group(1)) + 12 if int(m.group(1)) < 12 else int(m.group(1))}:{m.group(2)}"),
+        (r'(\d+):(\d+)\s*am', lambda m: f"{int(m.group(1)):02d}:{m.group(2)}"),
+    ]
+    
+    for pattern, formatter in time_patterns:
+        match = re.search(pattern, query_lower)
+        if match:
+            time_str = formatter(match)
+            break
     
     # Step 1: Check weather for the meeting date
     weather_result = get_weather_tool(location, date_query)
     
-    # Step 2: Determine if weather is good
+    # Step 2: Analyze weather
     is_good_weather = False
     weather_condition = "Unknown"
+    weather_emoji = "🌤️"
     
     if "clear" in weather_result.lower() or "sunny" in weather_result.lower():
         is_good_weather = True
-        weather_condition = "Clear/Sunny ☀️"
+        weather_condition = "Clear/Sunny"
+        weather_emoji = "☀️"
     elif "cloud" in weather_result.lower() and "rain" not in weather_result.lower():
         is_good_weather = True
-        weather_condition = "Partly Cloudy ☁️ (Acceptable)"
+        weather_condition = "Partly Cloudy"
+        weather_emoji = "☁️"
     elif "rain" in weather_result.lower() or "storm" in weather_result.lower():
         is_good_weather = False
-        weather_condition = "Rainy/Stormy 🌧️ (Not Recommended)"
+        weather_condition = "Rainy/Stormy"
+        weather_emoji = "🌧️"
     else:
         is_good_weather = True
         weather_condition = "Moderate"
+        weather_emoji = "🌤️"
     
-    # Step 3: Extract meeting title from query
+    # Step 3: Extract meeting title or use default
     meeting_title = "Team Meeting"
     if "review" in query_lower:
         meeting_title = "Review Meeting"
@@ -276,38 +303,70 @@ def meeting_scheduler_agent(state: AgentState) -> AgentState:
         meeting_title = "Standup Meeting"
     elif "planning" in query_lower:
         meeting_title = "Planning Meeting"
+    elif "discussion" in query_lower:
+        meeting_title = "Discussion Meeting"
     
-    # Step 4: Decision logic based on weather
+    # Step 4: Create meeting or suggest alternatives
     if is_good_weather:
-        # Create meeting with weather info
+        # Create meeting
         create_result = create_meeting_tool(
             title=meeting_title,
-            scheduled_date=meeting_date_str,
+            scheduled_date=f"{meeting_date_str} {time_str}",
             location=location,
-            description=f"Scheduled with weather consideration. Weather: {weather_condition}",
-            weather_condition=weather_condition
+            description=f"Meeting scheduled based on favorable weather conditions.",
+            weather_condition=f"{weather_emoji} {weather_condition}"
         )
         
         result = f"""
 {weather_result}
 
-🤖 Weather Analysis: {weather_condition}
-✅ Weather is suitable for a meeting!
+---
+
+### {weather_emoji} Weather Analysis
+
+| Status | Condition |
+|--------|-----------|
+| ✅ Favorable | {weather_condition} |
+
+---
+
+### 📅 Meeting Details
+
+| Field | Value |
+|-------|-------|
+| **Title** | {meeting_title} |
+| **Date** | {meeting_date.strftime('%B %d, %Y')} ({date_query}) |
+| **Time** | {time_str} |
+| **Location** | {location} |
+| **Weather** | {weather_emoji} {weather_condition} |
 
 {create_result}
+
+---
+💡 *You can also use the "+ Schedule" button to create meetings with more details.*
         """
     else:
         result = f"""
 {weather_result}
 
-🤖 Weather Analysis: {weather_condition}
-❌ Weather is not suitable for a meeting.
-💡 Recommendation: Consider rescheduling or using virtual meeting.
+{weather_emoji} **Weather Analysis:** {weather_condition}
+❌ **Weather is not ideal for an in-person meeting.**
+
+**Recommendations:**
+1. 🏠 Consider a virtual meeting instead
+2. 📅 Reschedule to a day with better weather
+3. 🌤️ Check weather forecast for upcoming days
+
+Would you like me to:
+- Create a virtual meeting for {date_query}?
+- Check weather for another day?
+- Suggest an alternative time?
         """
     
-    state["tool_result"] = result.strip()
-    logger.info("📅 Meeting scheduling logic executed")
+    state["tool_result"] = result
+    logger.info(f"📅 Meeting scheduler: {location}, {weather_condition}")
     return state
+
 
 
 def database_agent(state: AgentState) -> AgentState:
