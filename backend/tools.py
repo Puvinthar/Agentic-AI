@@ -403,13 +403,13 @@ Create a professional answer that:
 
 def web_search_tool(query: str) -> str:
     """
-    Search the web using DuckDuckGo with improved error handling and user feedback
+    Search the web using DuckDuckGo for real-time information
     
     Args:
         query: Search query
     
     Returns:
-        Formatted search results or appropriate error message
+        Formatted search results with content for AI to synthesize
     """
     try:
         from duckduckgo_search import DDGS
@@ -417,33 +417,27 @@ def web_search_tool(query: str) -> str:
         
         # Add retry logic for rate limiting
         max_retries = 2
-        retry_messages = []
         
         for attempt in range(max_retries):
             try:
                 ddgs = DDGS(timeout=20)
-                results = list(ddgs.text(query, max_results=3))
+                results = list(ddgs.text(query, max_results=5))
                 
                 if not results:
-                    return "⚠️ No search results found for your query. Try rephrasing or ask something else."
+                    return "WEB_SEARCH_NO_RESULTS: No information found online for this query."
                 
-                # If we had to retry, inform the user
-                retry_info = ""
-                if retry_messages:
-                    retry_info = f"ℹ️ *{' '.join(retry_messages)}*\n\n"
-                
-                formatted_results = f"{retry_info}🔍 **Web Search Results:**\n\n"
+                # Format results for LLM to synthesize
+                formatted_results = "WEB_SEARCH_RESULTS:\n\n"
                 for i, result in enumerate(results, 1):
-                    formatted_results += f"**{i}. {result['title']}**\n"
-                    formatted_results += f"{result['body'][:200]}...\n"
-                    formatted_results += f"🔗 {result['href']}\n\n"
+                    formatted_results += f"Source {i}:\n"
+                    formatted_results += f"Title: {result['title']}\n"
+                    formatted_results += f"Content: {result['body']}\n"
+                    formatted_results += f"URL: {result['href']}\n\n"
                 
                 return formatted_results
                 
             except Exception as retry_error:
                 if "Ratelimit" in str(retry_error) and attempt < max_retries - 1:
-                    retry_msg = f"Search service busy, retrying (attempt {attempt + 2}/{max_retries})..."
-                    retry_messages.append(retry_msg)
                     logger.warning(f"Rate limited, retrying... (attempt {attempt + 1})")
                     time.sleep(2)
                     continue

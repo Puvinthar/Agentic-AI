@@ -487,38 +487,70 @@ def general_search_agent(state: AgentState) -> AgentState:
 def response_generator(state: AgentState) -> AgentState:
     """
     Generate final response using LLM (if available) or direct tool result
+    Maintains strict RAG prompts for document queries
     """
     tool_result = state.get("tool_result", "").strip()
     user_query = state["user_query"]
+    intent = state.get("intent", "")
     
     if not tool_result:
         state["final_response"] = "Sorry, I couldn't generate a response. Please try again."
         return state
     
-    if llm:
+    # PRIORITY 1: Document queries - use tool result directly (RAG already processed)
+    # Document agent has its own strict prompt, don't override it
+    if intent == "document_query":
+        state["final_response"] = tool_result
+        logger.info("✅ Document query - using RAG result directly")
+        return state
+    
+    # PRIORITY 2: Web search - synthesize results with LLM
+    if llm and intent == "general_search" and "WEB_SEARCH_RESULTS:" in tool_result:
         try:
-            # Use LLM to generate natural response
-            system_message = """You are a professional AI assistant with expertise across multiple domains. 
-Provide clear, accurate, and well-structured responses based strictly on the provided tool results.
+            system_message = """You are a helpful AI assistant that answers questions using web search results.
 
-Guidelines:
-- Be professional yet approachable in tone
-- Answer ONLY what was asked - avoid unnecessary elaboration
-- For document queries: Extract and present the most relevant information concisely
-- For weather queries: Format data clearly with key metrics highlighted
-- For meetings: Present information in organized format
-- Use bullet points or numbered lists when appropriate
-- Never fabricate information not present in tool results
-- If information is incomplete, acknowledge it professionally"""
+IMPORTANT INSTRUCTIONS:
+- Read the web search results and ANSWER THE QUESTION directly
+- Synthesize information from multiple sources
+- Provide a clear, concise answer (2-4 sentences for factual questions)
+- Cite sources when relevant
+- If results don't contain the answer, say so clearly
+- Be conversational and natural"""
+            
+            prompt = f"""User Question: {user_query}
+
+{tool_result}
+
+Task: Based on these search results, answer the user's question directly and naturally. 
+Provide a clear, accurate answer synthesized from the information above."""
+            
+            messages = [
+                SystemMessage(content=system_message),
+                HumanMessage(content=prompt)
+            ]
+            
+            response = llm.invoke(messages)
+            final_response = response.content.strip()
+            
+            if final_response:
+                state["final_response"] = final_response
+                logger.info("✅ Web search response synthesized")
+                return state
+        except Exception as e:
+            logger.warning(f"LLM synthesis error: {e}")
+    
+    # PRIORITY 3: Other intents (weather, meetings) - minimal processing
+    if llm and intent in ["weather", "query_meeting", "schedule_meeting"]:
+        try:
+            system_message = """You are a professional AI assistant. 
+The tool has already formatted the results. Use them as-is or refine slightly for clarity."""
             
             prompt = f"""User Query: {user_query}
 
 Tool Results:
 {tool_result}
 
-Task: Generate a professional, focused response that directly answers the user's question. 
-If the tool result contains a complete answer, you may use it with minor refinements for clarity and professionalism.
-Ensure the response is concise and relevant to the specific question asked."""
+Task: If the result is well-formatted, use it directly. Otherwise, refine for clarity."""
             
             messages = [
                 SystemMessage(content=system_message),
@@ -537,7 +569,7 @@ Ensure the response is concise and relevant to the specific question asked."""
             logger.warning(f"LLM error: {e}, using tool result directly")
             state["final_response"] = tool_result
     else:
-        # Use tool result directly if no LLM available
+        # Use tool result directly if no LLM or unknown intent
         state["final_response"] = tool_result
     
     logger.info("✅ Final response generated")
